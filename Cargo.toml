@@ -1,0 +1,4 @@
+[package]
+name = "rtlsdr"
+version = "0.1.0"
+authors = ["Joseph Poirier <jdpoirier@gmail.com>"]
