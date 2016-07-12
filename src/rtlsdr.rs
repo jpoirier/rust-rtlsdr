@@ -4,18 +4,13 @@
          non_upper_case_globals,
          non_snake_case)]
 
-extern crate libc;
 use libc::{c_int, c_void, c_uchar, c_char};
-use std::{}
+use std::{};
 
 pub type uint8_t = u8;
 pub type uint16_t = u16;
 pub type uint32_t = u32;
 
-pub type intptr_t = isize;
-pub type uintptr_t = usize;
-pub type intmax_t = c_long;
-pub type uintmax_t = c_ulong;
 pub enum rtlsdr_dev { }
 pub type rtlsdr_dev_t = rtlsdr_dev;
 
@@ -33,7 +28,7 @@ pub enum rtlsdr_tuner {
 }
 pub type rtlsdr_read_async_cb_t = ::std::option::Option<unsafe extern "C" fn(buf: *mut c_uchar, len: uint32_t, ctx: *mut c_void)>;
 
-#[link(name = "c", kind = "dylib")]
+#[link(name = "rtlsdr", kind = "dylib")]
 extern "C" {
     pub fn rtlsdr_get_device_count() -> uint32_t;
     pub fn rtlsdr_get_device_name(index: uint32_t) -> *const c_char;
