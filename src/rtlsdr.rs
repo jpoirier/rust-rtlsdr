@@ -3,9 +3,10 @@
          non_camel_case_types,
          non_upper_case_globals,
          non_snake_case)]
-         
+
 extern crate libc;
 use libc::{c_int, c_void, c_uchar, c_char};
+use std::{}
 
 pub type uint8_t = u8;
 pub type uint16_t = u16;
