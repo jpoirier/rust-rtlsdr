@@ -4,7 +4,8 @@
          non_upper_case_globals,
          non_snake_case)]
 
-use libc::{c_int, c_void, c_uchar, c_char};
+
+use std::os::raw::{c_int, c_void, c_uchar, c_char};
 use std::{};
 
 pub type uint8_t = u8;
@@ -28,7 +29,7 @@ pub enum rtlsdr_tuner {
 }
 pub type rtlsdr_read_async_cb_t = ::std::option::Option<unsafe extern "C" fn(buf: *mut c_uchar, len: uint32_t, ctx: *mut c_void)>;
 
-#[link(name = "rtlsdr", kind = "dylib")]
+#[link(name = "rtlsdr")]
 extern "C" {
     pub fn rtlsdr_get_device_count() -> uint32_t;
     pub fn rtlsdr_get_device_name(index: uint32_t) -> *const c_char;

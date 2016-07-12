@@ -1,4 +1,4 @@
 
-extern crate libc;
 
-pub mod rtlsdr;
+
+pub mod ffi;
