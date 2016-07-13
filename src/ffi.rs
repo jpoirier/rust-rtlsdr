@@ -158,10 +158,10 @@ fn get_err_msg(e: c_int) -> Error {
 // pub fn get_index_by_serial( ) ->  {}
 
 pub fn open(index: i32) -> (Device, Error) {
-    let mut d: *mut rtlsdr_dev_t = std::ptr::null_mut();
     unsafe {
-        let e = rtlsdr_open(&mut d as *mut *mut rtlsdr_dev_t, index as uint32_t);
-        return (Device {dev: d}, get_err_msg(e));
+        let mut dev: *mut rtlsdr_dev_t = std::ptr::null_mut();
+        let err = rtlsdr_open(&mut dev as *mut *mut rtlsdr_dev_t, index as uint32_t);
+        return (Device {dev: dev}, get_err_msg(err));
     }
 }
 
