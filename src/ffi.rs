@@ -152,19 +152,19 @@ fn get_err_msg(e: c_int) -> Error {
     }
 }
 
-// get_device_count returns the number of devices detected.
+/// Returns the number of devices detected.
 // pub fn get_device_count() -> i32 {}
 
-// get_device_name returns the name of the device by index.
+/// Returns the name of the device by index.
 // pub fn get_device_name(index: ) ->  {}
 
-// get_device_usb_strings returns the information of a device by index.
+/// Returns the information of a device by index.
 // pub fn get_device_usb_strings( ) ->  i32 {}
 
-// get_index_by_serial returns a device index by serial id.
+/// Returns a device index by serial id.
 // pub fn get_index_by_serial( ) ->  {}
 
-// open returns an opened device based on index.
+/// Returns an opened device based on index.
 pub fn open(index: i32) -> (Device, Error) {
     unsafe {
         let mut dev: *mut rtlsdr_dev_t = std::ptr::null_mut();
@@ -174,21 +174,21 @@ pub fn open(index: i32) -> (Device, Error) {
 }
 
 impl Device {
-    // close closes the device.
+    /// Closes the device.
     pub fn close(&self) -> Error {
         unsafe {
             return get_err_msg(rtlsdr_close(self.dev));
         }
     }
 
-    // set_xtal_freq sets the crystal oscillator frequencies.
-    //
-    // Typically both ICs(rtlsdr and tuner) use the same clock. Changing the
-    // clock may make sense if you are applying an external clock to the tuner
-    // or to compensate the frequency (and sample rate) error caused by the
-    // original (cheap) crystal.
-    //
-    // Note, call this function only if you fully understand the implications.
+    /// Sets the crystal oscillator frequencies.
+    ///
+    /// Typically both ICs (rtlsdr and tuner) use the same clock. Changing the
+    /// clock may make sense if you are applying an external clock to the tuner
+    /// or to compensate the frequency (and sample rate) error caused by the
+    /// original (cheap) crystal.
+    ///
+    /// Note, call this function only if you fully understand the implications.
     pub fn set_xtal_freq(&self, rtlFreqHz: u32, tunerFreqHz: u32) -> Error {
         unsafe {
             return get_err_msg(rtlsdr_set_xtal_freq(self.dev,
@@ -197,8 +197,8 @@ impl Device {
         }
     }
 
-    // get_xtal_freq returns the crystal oscillator frequencies.
-    // Typically both ICs (rtlsdr and tuner) use the same clock.
+    /// Returns the crystal oscillator frequencies.
+    /// Typically both ICs (rtlsdr and tuner) use the same clock.
     pub fn get_xtal_freq(&self) -> (u32, u32, Error) {
         let mut rtlFreqHz: u32 = 0;
         let mut tunerFreqHz: u32 = 0;
@@ -210,128 +210,128 @@ impl Device {
         }
     }
 
-    // get_usb_strings returns the device information. Note, strings may be empty.
+    /// Returns the device information. Note, strings may be empty.
     // pub fn get_usb_strings(&self) -> Error {}
 
-    // write_eeprom writes data to the EEPROM.
+    /// Writes data to the EEPROM.
     // pub fn write_eeprom(&self) -> Error {}
 
-    // read_eeprom returns data read from the EEPROM.
+    /// Returns data read from the EEPROM.
     // pub fn read_eeprom(&self) -> Error {}
 
-    // set_center_freq sets the center frequency.
+    /// Sets the center frequency.
     pub fn set_center_freq(&self, freqHz: u32) -> Error {
         unsafe {
             return get_err_msg(rtlsdr_set_center_freq(self.dev, freqHz));
         }
     }
 
-    // get_center_freq returns the tuned frequency or zero on error.
+    /// Returns the tuned frequency or zero on error.
     pub fn get_center_freq(&self) -> u32 {
         unsafe {
             let freqHz = rtlsdr_get_center_freq(self.dev);
             return freqHz as u32;
         }
     }
-    // set_freq_correction sets the frequency correction.
+    /// Sets the frequency correction.
     // pub fn set_freq_correction(&self) -> Error {}
 
-    // get_freq_correction returns the frequency correction value.
+    /// Returns the frequency correction value.
     // pub fn get_freq_correction(&self) -> Error {}
 
-    // // get_tuner_type returns the tuner type.
+    /// Returns the tuner type.
     // pub fn get_tuner_type(&self) -> rtlsdr_tuner {}
 
-    // get_tuner_gains returns a list of supported tuner gains.
-    // Values are in tenths of dB, e.g. 115 means 11.5 dB.
+    /// Returns a list of supported tuner gains.
+    /// Values are in tenths of dB, e.g. 115 means 11.5 dB.
     // pub fn get_tuner_gains(&self) -> Error {}
 
-    // set_tuner_gain sets the tuner gain. Note, manual gain mode
-    // must be enabled for this to work. Valid gain values may be
-    // queried using GetTunerGains.
-    //
-    // Valid values (in tenths of a dB) are:
-    // -10, 15, 40, 65, 90, 115, 140, 165, 190, 215, 240, 290,
-    // 340, 420, 430, 450, 470, 490
-    //
-    // Gain values are in tenths of dB, e.g. 115 means 11.5 dB.
+    /// Sets the tuner gain. Note, manual gain mode
+    /// must be enabled for this to work. Valid gain values may be
+    /// queried using GetTunerGains.
+    ///
+    /// Valid values (in tenths of a dB) are:
+    /// -10, 15, 40, 65, 90, 115, 140, 165, 190, 215, 240, 290,
+    /// 340, 420, 430, 450, 470, 490
+    ///
+    /// Gain values are in tenths of dB, e.g. 115 means 11.5 dB.
     // pub fn set_tuner_gain(&self) -> Error {}
 
-    // set_tuner_bandwidth sets the device bandwidth.
+    /// Sets the device bandwidth.
     // pub fn set_tuner_bandwidth(&self) -> Error {}
 
-    // get_tuner_gain returns the tuner gain.
-    //
-    // Gain values are in tenths of dB, e.g. 115 means 11.5 dB.
+    /// Returns the tuner gain.
+    ///
+    /// Gain values are in tenths of dB, e.g. 115 means 11.5 dB.
     // pub fn get_tuner_gain(&self) -> Error {}
 
-    // set_tuner_if_gain sets the intermediate frequency gain.
-    //
-    // Intermediate frequency gain stage number 1 to 6.
-    // Gain values are in tenths of dB, e.g. -30 means -3.0 dB.
+    /// Sets the intermediate frequency gain.
+    ///
+    /// Intermediate frequency gain stage number 1 to 6.
+    /// Gain values are in tenths of dB, e.g. -30 means -3.0 dB.
     // pub fn set_tuner_if_gain(&self) -> Error {}
 
-    // set_tuner_gain_mode sets the gain mode (automatic/manual).
-    // Manual gain mode must be enabled for the gain setter function to work.
+    /// Sets the gain mode (automatic/manual).
+    /// Manual gain mode must be enabled for the gain setter function to work.
     // pub fn set_tuner_gain_mode(&self) -> Error {}
 
-    // set_sample_rate sets the sample rate.
-    //
-    // When applicable, the baseband filters are also selected based
-    // on the requested sample rate.
+    /// Sets the sample rate.
+    ///
+    /// When applicable, the baseband filters are also selected based
+    /// on the requested sample rate.
     // pub fn set_sample_rate(&self) -> Error {}
 
-    // get_sample_rate returns the sample rate.
+    /// Returns the sample rate.
     // pub fn get_sample_rate(&self) -> Error {}
 
-    // set_testmode sets device to  test mode.
-    //
-    // Test mode returns 8 bit counters instead of samples. Note,
-    // the counter is generated inside the device.
+    /// Sets device to  test mode.
+    ///
+    /// Test mode returns 8 bit counters instead of samples. Note,
+    /// the counter is generated inside the device.
     // pub fn set_testmode(&self) -> Error {}
 
-    // set_agc_mode sets the AGC mode.
+    /// Sets the AGC mode.
     // pub fn set_agc_mode(&self) -> Error {}
 
-    // set_direct_sampling sets the direct sampling mode.
-    //
-    // When enabled, the IF mode of the device is activated, and
-    // SetCenterFreq() will control the IF-frequency of the DDC, which
-    // can be used to tune from 0 to 28.8 MHz (xtal frequency of the device).
+    /// Sets the direct sampling mode.
+    ///
+    /// When enabled, the IF mode of the device is activated, and
+    /// SetCenterFreq() will control the IF-frequency of the DDC, which
+    /// can be used to tune from 0 to 28.8 MHz (xtal frequency of the device).
     // pub fn set_direct_sampling(&self) -> Error {}
 
-    // get_direct_sampling returns the state of direct sampling mode.
+    /// Returns the state of direct sampling mode.
     // pub fn get_direct_sampling(&self) -> Error {}
 
-    // set_offset_tuning sets the offset tuning mode for zero-IF tuners, which
-    // avoids problems caused by the DC offset of the ADCs and 1/f noise.
+    /// Sets the offset tuning mode for zero-IF tuners, which
+    /// avoids problems caused by the DC offset of the ADCs and 1/f noise.
     // pub fn set_offset_tuning(&self) -> Error {}
 
-    // get_offset_tuning returns the offset tuning mode.
+    /// Returns the offset tuning mode.
     // pub fn get_offset_tuning(&self) -> Error {}
 
-    // reset_buffer resets the streaming buffer.
+    /// Resets the streaming buffer.
     // pub fn reset_buffer(&self) -> Error {}
 
-    // read_sync performs a synchronous read of samples and returns
-    // the number of samples read.
+    /// Performs a synchronous read of samples and returns
+    /// the number of samples read.
     // pub fn read_sync(&self) -> Error {}
 
 
-    // read_async reads samples asynchronously. Note, this function
-    // will block until canceled using CancelAsync. ReadAsyncCbT is
-    // a package global variable.
-    //
-    // Note, please use ReadAsync2 as this method will be deprecated
-    // in the future
-    //
-    // Optional bufNum buffer count, bufNum * bufLen = overall buffer size,
-    // set to 0 for default buffer count (32).
-    // Optional bufLen buffer length, must be multiple of 512, set to 0 for
-    // default buffer length (16 * 32 * 512).
+    /// Reads samples asynchronously. Note, this function
+    /// will block until canceled using CancelAsync. ReadAsyncCbT is
+    /// a package global variable.
+    ///
+    /// Note, please use ReadAsync2 as this method will be deprecated
+    /// in the future
+    ///
+    /// Optional bufNum buffer count, bufNum * bufLen = overall buffer size,
+    /// set to 0 for default buffer count (32).
+    /// Optional bufLen buffer length, must be multiple of 512, set to 0 for
+    /// default buffer length (16 * 32 * 512).
     // pub fn read_async(&self) -> Error {}
 
-    // CancelAsync cancels all pending asynchronous operations.
+    /// Cancels all pending asynchronous operations.
     // pub fn cancel_async(&self) -> Error {}
 }
 
@@ -344,9 +344,7 @@ fn main() {
         _ => return,
     }
 
-    let rtl_freq: u32 = 28800000;
-	let tuner_freq: u32 = 28800000;
-    let err = dev.set_xtal_freq(rtl_freq, tuner_freq);
+    let err = dev.set_xtal_freq(28800000, 28800000);
     match err {
         Error::NoError => println!("set_xtal_freq successful"),
         _ => return,
