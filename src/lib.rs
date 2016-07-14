@@ -1,4 +1,4 @@
 
 
 
-pub mod ffi;
+mod ffi;
