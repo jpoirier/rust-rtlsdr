@@ -9,6 +9,10 @@
 
 use std::os::raw::{c_int, c_void, c_uchar, c_char};
 use std::option::Option;
+use std::string::String;
+use std::ffi::CStr;
+use std::ptr;
+
 
 pub type uint8_t = u8;
 pub type uint16_t = u16;
@@ -158,17 +162,30 @@ pub fn get_device_count() -> i32 {
 }
 
 /// Returns the name of the device by index.
-// pub fn get_device_name(index: i32) -> string {
-//     let name: string
-//     unsafe {
-//     }
-// }
+pub fn get_device_name(index: i32) -> String {
+    unsafe {
+        CStr::from_ptr(rtlsdr_get_device_name(index as uint32_t)).to_string_lossy().into_owned()
+    }
+}
 
 /// Returns the information of a device by index.
-// pub fn get_device_usb_strings( ) ->  Error {}
+pub fn get_device_usb_strings(index: i32) -> (String, String, String, Error) {
+    unsafe {
+        let m = String::with_capacity(256);
+        let p = String::with_capacity(256);
+        let s = String::with_capacity(256);
+        let err = rtlsdr_get_device_usb_strings(index as uint32_t,
+                                                m.as_ptr() as *mut c_char,
+                                                p.as_ptr() as *mut c_char,
+                                                s.as_ptr() as *mut c_char);
+        (m, p, s, get_err_msg(err))
+    }
+}
 
 /// Returns a device index by serial id.
-// pub fn get_index_by_serial( ) ->  Error {}
+pub fn get_index_by_serial(serial: String) -> i32 {
+    unsafe { rtlsdr_get_index_by_serial(serial.as_ptr() as *const c_char) as i32 }
+}
 
 /// Returns an opened device by index.
 pub fn open(index: i32) -> (Device, Error) {
@@ -196,8 +213,8 @@ impl Device {
     pub fn set_xtal_freq(&self, rtlFreqHz: i32, tunerFreqHz: i32) -> Error {
         unsafe {
             get_err_msg(rtlsdr_set_xtal_freq(self.dev,
-                                                    rtlFreqHz as uint32_t,
-                                                    tunerFreqHz as uint32_t))
+                                             rtlFreqHz as uint32_t,
+                                             tunerFreqHz as uint32_t))
         }
     }
 
@@ -214,14 +231,87 @@ impl Device {
         }
     }
 
+    /// Returns the device information (manufact, product, serial).
+    /// Note, strings may be empty.
+    pub fn get_usb_strings(&self) -> (String, String, String, Error) {
+        unsafe {
+            let m = String::with_capacity(256);
+            let p = String::with_capacity(256);
+            let s = String::with_capacity(256);
+            let err = rtlsdr_get_usb_strings(self.dev,
+                                             m.as_ptr() as *mut c_char,
+                                             p.as_ptr() as *mut c_char,
+                                             s.as_ptr() as *mut c_char);
+            (m.trim().to_string(), p.trim().to_string(), s.trim().to_string(), get_err_msg(err))
+        }
+    }
 
+    /// Writes data to the EEPROM.
+    // pub fn write_eeprom(&self) -> Error {}
+
+    /// Returns data read from the EEPROM.
+    // pub fn read_eeprom(&self) -> Error {}
+
+    /// Sets the center frequency.
+    pub fn set_center_freq(&self, freqHz: i32) -> Error {
+        unsafe {
+            get_err_msg(rtlsdr_set_center_freq(self.dev, freqHz as uint32_t))
+        }
+    }
 
     /// Returns the tuned frequency or zero on error.
     pub fn get_center_freq(&self) -> i32 {
         unsafe { rtlsdr_get_center_freq(self.dev) as i32 }
     }
 
+    /// Sets the frequency correction.
+    pub fn set_freq_correction(&self, ppm: i32) -> Error {
+	    unsafe {
+            get_err_msg(rtlsdr_set_freq_correction(self.dev, ppm))
+        }
+    }
 
+    /// Returns the frequency correction value.
+    pub fn get_freq_correction(&self) -> i32 {
+        unsafe { rtlsdr_get_freq_correction(self.dev) }
+    }
+
+    /// Returns the tuner type.
+    pub fn get_tuner_type(&self) -> rtlsdr_tuner {
+        unsafe { rtlsdr_get_tuner_type(self.dev) }
+    }
+
+    /// Returns a list of supported tuner gains.
+    /// Values are in tenths of dB, e.g. 115 means 11.5 dB.
+    pub fn get_tuner_gains(&self) -> (Vec<i32>, Error) {
+        unsafe {
+            let i = rtlsdr_get_tuner_gains(self.dev, ptr::null_mut() as *mut c_int);
+            if i <= 0 { return (Vec::new(),  get_err_msg(i)); }
+            let v = vec![0; i as usize];
+            let err = rtlsdr_get_tuner_gains(self.dev, v.as_ptr() as *mut c_int);
+            (v, get_err_msg(err))
+        }
+    }
+
+    /// Sets the tuner gain. Note, manual gain mode
+    /// must be enabled for this to work. Valid gain values may be
+    /// queried using GetTunerGains.
+    ///
+    /// Valid values (in tenths of a dB) are:
+    /// -10, 15, 40, 65, 90, 115, 140, 165, 190, 215, 240, 290,
+    /// 340, 420, 430, 450, 470, 490
+    ///
+    /// Gain values are in tenths of dB, e.g. 115 means 11.5 dB.
+    pub fn set_tuner_gain(&self, gain: i32) -> Error {
+        unsafe { get_err_msg(rtlsdr_set_tuner_gain(self.dev, gain)) }
+    }
+
+    /// Returns the tuner gain.
+    ///
+    /// Gain values are in tenths of dB, e.g. 115 means 11.5 dB.
+    pub fn get_tuner_gain(&self) -> i32 {
+        unsafe { rtlsdr_get_tuner_gain(self.dev) }
+    }
 }
 
 fn main() {
@@ -240,7 +330,10 @@ fn main() {
     }
 
     let (rtl_freq, tuner_freq, err) = dev.get_xtal_freq();
-     println!("rtl_freq: {}, tuner_freq: {}, err: {:?}", rtl_freq, tuner_freq, err);
+    println!("rtl_freq: {}, tuner_freq: {}, err: {:?}",
+             rtl_freq,
+             tuner_freq,
+             err);
 
     let err = dev.close();
     println!("dev close status: {:?}", err);
