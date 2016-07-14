@@ -161,7 +161,7 @@ pub fn open(index: i32) -> (Device, Error) {
     unsafe {
         let mut dev: *mut rtlsdr_dev_t = std::ptr::null_mut();
         let err = rtlsdr_open(&mut dev as *mut *mut rtlsdr_dev_t, index as uint32_t);
-        return (Device {dev: dev}, get_err_msg(err));
+        return (Device { dev: dev }, get_err_msg(err));
     }
 }
 
@@ -171,44 +171,74 @@ impl Device {
             return get_err_msg(rtlsdr_close(self.dev));
         }
     }
-//     pub fn set_xtal_freq() -> Error {}
-//     pub fn get_xtal_freq() -> Error {}
-//     pub fn get_usb_strings() -> Error {}
-//     pub fn write_eeprom() -> Error {}
-//     pub fn read_eeprom() -> Error {}
-//     pub fn set_center_freq() -> Error {}
-//     pub fn get_center_freq() -> Error {}
-//     pub fn set_freq_correction() -> Error {}
-//     pub fn get_freq_correction() -> Error {}
-//     pub fn get_tuner_type() -> rtlsdr_tuner {}
-//     pub fn get_tuner_gains() -> Error {}
-//     pub fn set_tuner_gain() -> Error {}
-//     pub fn set_tuner_bandwidth() -> Error {}
-//     pub fn get_tuner_gain() -> Error {}
-//     pub fn set_tuner_if_gain() -> Error {}
-//     pub fn set_tuner_gain_mode() -> Error {}
-//     pub fn set_sample_rate() -> Error {}
-//     pub fn get_sample_rate() -> Error {}
-//     pub fn set_testmode() -> Error {}
-//     pub fn set_agc_mode() -> Error {}
-//     pub fn set_direct_sampling() -> Error {}
-//     pub fn get_direct_sampling() -> Error {}
-//     pub fn set_offset_tuning() -> Error {}
-//     pub fn get_offset_tuning() -> Error {}
-//     pub fn reset_buffer() -> Error {}
-//     pub fn read_sync() -> Error {}
-//     pub fn wait_async() -> Error {}
-//     pub fn read_async() -> Error {}
-//     pub fn cancel_async() -> Error {}
+
+    pub fn set_xtal_freq(&self, rtlFreqHz: u32, tunerFreqHz: u32) -> Error {
+        unsafe {
+            return get_err_msg(rtlsdr_set_xtal_freq(self.dev,
+                                                    rtlFreqHz,
+                                                    tunerFreqHz));
+        }
+    }
+
+    pub fn get_xtal_freq(&self) -> (u32, u32, Error) {
+        let mut rtlFreqHz: u32 = 0;
+        let mut tunerFreqHz: u32 = 0;
+        unsafe {
+            let err = rtlsdr_get_xtal_freq(self.dev,
+                                           &mut rtlFreqHz as *mut uint32_t,
+                                           &mut tunerFreqHz as *mut uint32_t);
+            return (rtlFreqHz, tunerFreqHz, get_err_msg(err));
+        }
+    }
+    //     pub fn get_usb_strings() -> Error {}
+    //     pub fn write_eeprom() -> Error {}
+    //     pub fn read_eeprom() -> Error {}
+    //     pub fn set_center_freq() -> Error {}
+    //     pub fn get_center_freq() -> Error {}
+    //     pub fn set_freq_correction() -> Error {}
+    //     pub fn get_freq_correction() -> Error {}
+    //     pub fn get_tuner_type() -> rtlsdr_tuner {}
+    //     pub fn get_tuner_gains() -> Error {}
+    //     pub fn set_tuner_gain() -> Error {}
+    //     pub fn set_tuner_bandwidth() -> Error {}
+    //     pub fn get_tuner_gain() -> Error {}
+    //     pub fn set_tuner_if_gain() -> Error {}
+    //     pub fn set_tuner_gain_mode() -> Error {}
+    //     pub fn set_sample_rate() -> Error {}
+    //     pub fn get_sample_rate() -> Error {}
+    //     pub fn set_testmode() -> Error {}
+    //     pub fn set_agc_mode() -> Error {}
+    //     pub fn set_direct_sampling() -> Error {}
+    //     pub fn get_direct_sampling() -> Error {}
+    //     pub fn set_offset_tuning() -> Error {}
+    //     pub fn get_offset_tuning() -> Error {}
+    //     pub fn reset_buffer() -> Error {}
+    //     pub fn read_sync() -> Error {}
+    //     pub fn wait_async() -> Error {}
+    //     pub fn read_async() -> Error {}
+    //     pub fn cancel_async() -> Error {}
 }
 
 fn main() {
     println!("opening...");
+
     let (dev, err) = open(0);
     match err {
         Error::NoError => println!("open successful"),
         _ => return,
     }
-    let e = dev.close();
-    println!("dev close status: {:?}", e);
+
+    let rtl_freq: u32 = 28800000;
+	let tuner_freq: u32 = 28800000;
+    let err = dev.set_xtal_freq(rtl_freq, tuner_freq);
+    match err {
+        Error::NoError => println!("set_xtal_freq successful"),
+        _ => return,
+    }
+
+    let (rtl_freq, tuner_freq, err) = dev.get_xtal_freq();
+     println!("rtl_freq: {}, tuner_freq: {}, err: {:?}", rtl_freq, tuner_freq, err);
+
+    let err = dev.close();
+    println!("dev close status: {:?}", err);
 }
