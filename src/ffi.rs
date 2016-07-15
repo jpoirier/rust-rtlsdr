@@ -4,9 +4,6 @@
          non_upper_case_globals,
          non_snake_case)]
 
-// extern crate libc;
-// use libc::{c_int, c_void, c_uchar, c_char};
-
 use std::os::raw::{c_int, c_void, c_uchar, c_char};
 use std::option::Option;
 use std::string::String;
@@ -255,10 +252,24 @@ impl Device {
     }
 
     /// Writes data to the EEPROM.
-    // pub fn write_eeprom(&self) -> Error {}
+    pub fn write_eeprom(&self, data: Vec<u8>, offset: u8) -> Error {
+        unsafe {
+            get_err_msg(rtlsdr_write_eeprom(self.dev,
+                                            data.as_ptr() as *mut uint8_t,
+                                            offset,
+                                            data.len() as uint16_t))
+        }
+    }
 
     /// Returns data read from the EEPROM.
-    // pub fn read_eeprom(&self) -> Error {}
+    pub fn read_eeprom(&self, offset: u8, len: u16) -> (Vec<u8>, Error) {
+        unsafe {
+            let v = vec![0u8; len as usize];
+            let err = rtlsdr_read_eeprom(self.dev, v.as_ptr() as *mut uint8_t, offset, len);
+            (v, get_err_msg(err))
+        }
+
+    }
 
     /// Sets the center frequency.
     pub fn set_center_freq(&self, freqHz: i32) -> Error {
@@ -406,20 +417,34 @@ impl Device {
 
     /// Performs a synchronous read of samples and returns
     /// the number of samples read.
-    // pub fn read_sync(&self) -> Error {}
+    pub fn read_sync(&self, buf: &mut Vec<u8>, len: i32) -> (i32, Error) {
+        unsafe {
+            let mut nRead: i32 = 0;
+            let err = rtlsdr_read_sync(self.dev,
+                                       buf.as_ptr() as *mut c_void,
+                                       len,
+                                       &mut nRead as *mut c_int);
+            (nRead, get_err_msg(err))
+        }
+
+    }
 
     /// Reads samples asynchronously. Note, this function
     /// will block until canceled using CancelAsync. ReadAsyncCbT is
     /// a package global variable.
     ///
-    /// Note, please use ReadAsync2 as this method will be deprecated
-    /// in the future
-    ///
     /// Optional bufNum buffer count, bufNum * bufLen = overall buffer size,
     /// set to 0 for default buffer count (32).
     /// Optional bufLen buffer length, must be multiple of 512, set to 0 for
     /// default buffer length (16 * 32 * 512).
-    // pub fn read_async(&self) -> Error {}
+    pub fn read_async(&self,
+                      f: rtlsdr_read_async_cb_t,
+                      ctx: *mut c_void,
+                      buf_num: u32,
+                      buf_len: u32)
+                      -> Error {
+        unsafe { get_err_msg(rtlsdr_read_async(self.dev, f, ctx, buf_num, buf_len)) }
+    }
 
     /// Cancels all pending asynchronous operations.
     pub fn cancel_async(&self) -> Error {
