@@ -13,10 +13,18 @@ use std::string::String;
 use std::ffi::CStr;
 use std::ptr;
 
-
 pub type uint8_t = u8;
 pub type uint16_t = u16;
 pub type uint32_t = u32;
+
+
+// Sampling modes.
+pub enum SamplingMode {
+    SamplingNone = 0,
+    SamplingIADC = 1,
+    SamplingQADC = 2,
+    SamplingUnknown = 3,
+}
 
 pub enum rtlsdr_dev { }
 type rtlsdr_dev_t = rtlsdr_dev;
@@ -254,9 +262,7 @@ impl Device {
 
     /// Sets the center frequency.
     pub fn set_center_freq(&self, freqHz: i32) -> Error {
-        unsafe {
-            get_err_msg(rtlsdr_set_center_freq(self.dev, freqHz as uint32_t))
-        }
+        unsafe { get_err_msg(rtlsdr_set_center_freq(self.dev, freqHz as uint32_t)) }
     }
 
     /// Returns the tuned frequency or zero on error.
@@ -266,9 +272,7 @@ impl Device {
 
     /// Sets the frequency correction.
     pub fn set_freq_correction(&self, ppm: i32) -> Error {
-	    unsafe {
-            get_err_msg(rtlsdr_set_freq_correction(self.dev, ppm))
-        }
+        unsafe { get_err_msg(rtlsdr_set_freq_correction(self.dev, ppm)) }
     }
 
     /// Returns the frequency correction value.
@@ -286,7 +290,9 @@ impl Device {
     pub fn get_tuner_gains(&self) -> (Vec<i32>, Error) {
         unsafe {
             let i = rtlsdr_get_tuner_gains(self.dev, ptr::null_mut() as *mut c_int);
-            if i <= 0 { return (Vec::new(),  get_err_msg(i)); }
+            if i <= 0 {
+                return (Vec::new(), get_err_msg(i));
+            }
             let v = vec![0; i as usize];
             let err = rtlsdr_get_tuner_gains(self.dev, v.as_ptr() as *mut c_int);
             (v, get_err_msg(err))
@@ -311,6 +317,114 @@ impl Device {
     /// Gain values are in tenths of dB, e.g. 115 means 11.5 dB.
     pub fn get_tuner_gain(&self) -> i32 {
         unsafe { rtlsdr_get_tuner_gain(self.dev) }
+    }
+
+    /// Sets the device bandwidth.
+    pub fn set_tuner_bandwidth(&self, bwHz: i32) -> Error {
+        unsafe { get_err_msg(rtlsdr_set_tuner_bandwidth(self.dev, bwHz as uint32_t)) }
+    }
+
+    /// Sets the intermediate frequency gain.
+    ///
+    /// Intermediate frequency gain stage number 1 to 6.
+    /// Gain values are in tenths of dB, e.g. -30 means -3.0 dB.
+    pub fn set_tuner_if_gain(&self, stage: i32, gainsTenthsDb: i32) -> Error {
+        unsafe { get_err_msg(rtlsdr_set_tuner_if_gain(self.dev, stage, gainsTenthsDb)) }
+
+    }
+
+    /// Sets the gain mode, automatic or manual.
+    /// Manual gain mode must be enabled for the gain setter function to work.
+    pub fn set_tuner_gain_mode(&self, manualMode: bool) -> Error {
+        unsafe { get_err_msg(rtlsdr_set_tuner_gain_mode(self.dev, manualMode as i32)) }
+
+    }
+
+    /// Sets the sample rate.
+    ///
+    /// When applicable, the baseband filters are also selected based
+    /// on the requested sample rate.
+    pub fn set_sample_rate(&self, rateHz: i32) -> Error {
+        unsafe { get_err_msg(rtlsdr_set_sample_rate(self.dev, rateHz as uint32_t)) }
+    }
+
+    /// Returns the sample rate.
+    pub fn get_sample_rate(&self) -> i32 {
+        unsafe { rtlsdr_get_sample_rate(self.dev) }
+    }
+
+    /// Sets device to test mode.
+    ///
+    /// Test mode returns 8 bit counters instead of samples. Note,
+    /// the counter is generated inside the device.
+    pub fn set_testmode(&self, testMode: bool) -> Error {
+        unsafe { get_err_msg(rtlsdr_set_testmode(self.dev, testMode as i32)) }
+    }
+
+    /// Sets the AGC mode.
+    pub fn set_agc_mode(&self, AGCMode: bool) -> Error {
+        unsafe { get_err_msg(rtlsdr_set_agc_mode(self.dev, AGCMode as i32)) }
+    }
+
+    /// Sets the direct sampling mode.
+    ///
+    /// When enabled, the IF mode of the device is activated, and
+    /// SetCenterFreq() will control the IF-frequency of the DDC, which
+    /// can be used to tune from 0 to 28.8 MHz (xtal frequency of the device).
+    pub fn set_direct_sampling(&self, mode: SamplingMode) -> Error {
+        unsafe { get_err_msg(rtlsdr_set_direct_sampling(self.dev, mode as i32)) }
+    }
+
+    /// Returns the state of direct sampling mode.
+    pub fn get_direct_sampling(&self) -> SamplingMode {
+        unsafe {
+            use SamplingMode::*;
+            match rtlsdr_get_direct_sampling(self.dev) {
+                0 => SamplingNone,
+                1 => SamplingIADC,
+                2 => SamplingQADC,
+                _ => SamplingUnknown,
+            }
+        }
+    }
+
+    /// Sets the offset tuning mode for zero-IF tuners, which
+    /// avoids problems caused by the DC offset of the ADCs and 1/f noise.
+    pub fn set_offset_tuning(&self, enable: bool) -> Error {
+        unsafe { get_err_msg(rtlsdr_set_offset_tuning(self.dev, enable as i32)) }
+    }
+
+    /// Returns the offset tuning mode.
+    pub fn get_offset_tuning(&self) -> Error {
+        unsafe { get_err_msg(rtlsdr_get_offset_tuning(self.dev)) }
+    }
+
+    /// Resets the streaming buffer.
+    pub fn reset_buffer(&self) -> Error {
+        unsafe { get_err_msg(rtlsdr_reset_buffer(self.dev)) }
+    }
+
+    /// Performs a synchronous read of samples and returns
+    /// the number of samples read.
+    // pub fn read_sync(&self) -> Error {}
+
+    /// Reads samples asynchronously. Note, this function
+    /// will block until canceled using CancelAsync. ReadAsyncCbT is
+    /// a package global variable.
+    ///
+    /// Note, please use ReadAsync2 as this method will be deprecated
+    /// in the future
+    ///
+    /// Optional bufNum buffer count, bufNum * bufLen = overall buffer size,
+    /// set to 0 for default buffer count (32).
+    /// Optional bufLen buffer length, must be multiple of 512, set to 0 for
+    /// default buffer length (16 * 32 * 512).
+    // pub fn read_async(&self) -> Error {}
+
+    /// Cancels all pending asynchronous operations.
+    pub fn cancel_async(&self) -> Error {
+        unsafe { get_err_msg(rtlsdr_cancel_async(self.dev)) }
+
     }
 }
 
