@@ -7,7 +7,7 @@ homepage = "https://github.com/jpoirier/rust-rtlsdr"
 description = "Rust wrapper for librtlsdr."
 readme = "README.md"
 keywords = ["SDR", "ffi", "rtlsdr"]
-license = "BSD 3"
+license = "MIT"
 
 [lib]
 name = "rtlsdr"
