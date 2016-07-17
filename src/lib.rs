@@ -3,12 +3,14 @@
          non_upper_case_globals,
          non_snake_case)]
 
+use std::sync::Arc;
 use std::os::raw::{c_int, c_void, c_uchar, c_char};
 use std::option::Option;
 use std::string::String;
 use std::ffi::CStr;
 use std::ptr;
 use std::str;
+
 
 pub type uint8_t = u8;
 pub type uint16_t = u16;
@@ -43,10 +45,14 @@ pub const STR_OFFSET_START: i32 = 0x09;
 enum rtlsdr_dev { }
 type rtlsdr_dev_t = rtlsdr_dev;
 
-
+#[derive(Copy, Clone)]
 pub struct Device {
     dev: *mut rtlsdr_dev_t,
 }
+
+unsafe impl Send for Device {}
+unsafe impl Sync for Device {}
+
 
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -80,6 +86,7 @@ pub enum Error {
     Other,
 }
 
+/// read async callabck function
 pub type rtlsdr_read_async_cb_t = Option<unsafe extern "C" fn(buf: *mut c_uchar,
                                                               len: uint32_t,
                                                               ctx: *mut c_void)>;
@@ -228,11 +235,11 @@ pub fn get_index_by_serial(serial: String) -> i32 {
 }
 
 /// Returns an opened device by index.
-pub fn open(index: i32) -> (Device, Error) {
+pub fn open(index: i32) -> (Arc<Device>, Error) {
     unsafe {
         let mut dev: *mut rtlsdr_dev_t = std::ptr::null_mut();
         let err = rtlsdr_open(&mut dev as *mut *mut rtlsdr_dev_t, index as uint32_t);
-        (Device { dev: dev }, get_err_msg(err))
+        (Arc::new(Device { dev: dev }), get_err_msg(err))
     }
 }
 
@@ -458,8 +465,8 @@ impl Device {
 
     /// Performs a synchronous read of samples and returns
     /// the number of samples read.
-    pub fn read_sync(&self, len: i32) -> (Vec<i8>, i32, Error) {
-        let mut buf = vec![0i8; len as usize];
+    pub fn read_sync(&self, len: i32) -> (Vec<u8>, i32, Error) {
+        let mut buf = vec![0u8; len as usize];
         let mut nRead: i32 = 0;
         unsafe {
             let err = rtlsdr_read_sync(self.dev,

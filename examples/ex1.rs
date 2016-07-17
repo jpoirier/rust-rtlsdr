@@ -1,8 +1,15 @@
-
+#![allow(non_camel_case_types, non_snake_case)]
 
 extern crate rtlsdr;
 
+use std::os::raw::{c_void, c_uchar};
+use std::ptr;
 use rtlsdr::Error;
+use std::time::Duration;
+use std::thread;
+
+
+pub type uint32_t = u32;
 
 fn sdr_config(dev: &rtlsdr::Device) -> Error {
     let (m, p, s, mut err) = dev.get_usb_strings();
@@ -95,10 +102,11 @@ fn sdr_config(dev: &rtlsdr::Device) -> Error {
     };
 
 	//---------- Get/Set Freq Correction ----------
-    let freq_corr = dev.get_freq_correction();
+    let mut freq_corr = dev.get_freq_correction();
     println!("get_freq_correction - {}", freq_corr);
 
-    let err = dev.set_freq_correction(freq_corr+1);
+    freq_corr += 1;
+    let err = dev.set_freq_correction(freq_corr);
     match err {
         Error::NoError => println!("set_freq_correction successful - {}", freq_corr),
         _ => return err,
@@ -107,6 +115,14 @@ fn sdr_config(dev: &rtlsdr::Device) -> Error {
     //----------  ----------
     Error::NoError
 }
+
+unsafe extern "C" fn read_async_callback(buf: *mut c_uchar, len: uint32_t, ctx: *mut c_void) {
+    let _ = ctx;
+    let v =Vec::<u8>::from_raw_parts(buf, len as usize, len as usize);
+    println!("----- read_async_callback buffer size - {}", len);
+    println!("----- {} {} {} {} {} {}", v[0], v[1], v[2], v[3], v[4], v[5]);
+}
+
 
 fn main() {
     //---------- Device Check ----------
@@ -129,17 +145,46 @@ fn main() {
     match err {
         Error::NoError => println!("open successful"),
         _ => return,
-    };
+    }
 
     err = sdr_config(&dev);
     match err {
         Error::NoError => println!("sdr_config successful..."),
         _ => return,
-    };
+    }
+
+    println!("calling read_sync...");
+    for i in 0..10 {
+        let (_, read_count, err) = dev.read_sync(rtlsdr::DefaultBufLength);
+        println!("----- read_sync requested iteration {} -----", i);
+        println!("\tread_sync requested - {}", rtlsdr::DefaultBufLength);
+        println!("\tread_sync received  - {}", read_count);
+        println!("\tread_sync err msg   - {:?}", err);
+    }
+
+    dev.reset_buffer();
+
+    let d = dev.clone();
+    thread::spawn(move || {
+        println!("async_stop thread sleeping for 5 seconds...");
+        thread::sleep(Duration::from_millis(5000));
+        println!("async_stop thread awake, canceling read async...");
+        d.cancel_async();
+    });
+
+    println!("calling read_async...");
+    err = dev.read_async(Some(read_async_callback),
+                        ptr::null_mut(),
+                        rtlsdr::DefaultAsyncBufNumber,
+                        rtlsdr::DefaultBufLength);
+    match err {
+        Error::NoError => println!("device close successful..."),
+        _ => println!("dev close error - {:?}", err),
+    }
 
     err = dev.close();
     match err {
-        Error::NoError => println!("close successful..."),
+        Error::NoError => println!("device close successful..."),
         _ => println!("dev close error - {:?}", err),
-    };
+    }
 }

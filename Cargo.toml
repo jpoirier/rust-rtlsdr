@@ -1,12 +1,12 @@
 [package]
 name = "rtl-sdr"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Joseph Poirier <jdpoirier@gmail.com>"]
 repository = "https://github.com/jpoirier/rust-rtlsdr"
 homepage = "https://github.com/jpoirier/rust-rtlsdr"
 description = "Rust wrapper for librtlsdr."
 readme = "README.md"
-keywords = ["SDR", "ffi", "rtlsdr"]
+keywords = ["SDR", "ffi", "rtlsdr", "rtl-sdr"]
 license = "MIT"
 
 [lib]
