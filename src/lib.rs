@@ -8,6 +8,11 @@ use std::ptr;
 use std::str;
 
 
+// TODO:
+// - fix the magic numbers
+// - better way to handle errors
+// - String vs str?
+// - test get/set_hw_info and friends
 
 // Sampling modes.
 pub enum SamplingMode {
@@ -46,6 +51,7 @@ unsafe impl Send for Device {}
 unsafe impl Sync for Device {}
 
 // HwInfo holds dongle specific information.
+#[derive(Debug)]
 pub struct HwInfo {
     vendor_id: u16,
     product_id: u16,
@@ -56,7 +62,6 @@ pub struct HwInfo {
     enable_ir: bool,
     remote_wakeup: bool,
 }
-
 
 #[derive(Copy, Clone)]
 #[repr(u32)]
@@ -90,6 +95,7 @@ pub enum Error {
     NoValidEEPROMHeader,
     StringValueTooLong,
     StringDescriptorInvalid,
+    StringDescriptorTooLong,
     Other,
 }
 
@@ -177,6 +183,7 @@ fn get_err_msg(e: c_int) -> Error {
         -13 => NoValidEEPROMHeader,
         -14 => StringValueTooLong,
         -15 => StringDescriptorInvalid,
+        -16 => StringDescriptorTooLong,
         _ => Other,
     }
 }
@@ -237,9 +244,9 @@ pub fn open(index: i32) -> (Arc<Device>, Error) {
     }
 }
 
-/// GetStringDescriptors gets the manufacturer, product, and serial
-/// strings from the hardware's eeprom.
-pub fn get_string_descriptors(data: &Vec<u8>) -> (String, String, String, Error) {
+/// Gets the manufacturer, product, and serial
+/// strings from data.
+fn get_string_descriptors(data: &Vec<u8>) -> (String, String, String, Error) {
     let mut pos = STR_OFFSET_START;
     let mut strings: Vec<String> = Vec::new();
 
@@ -262,6 +269,33 @@ pub fn get_string_descriptors(data: &Vec<u8>) -> (String, String, String, Error)
         pos += j;
     }
     (strings[0].clone(), strings[1].clone(), strings[2].clone(), get_err_msg(0))
+}
+
+/// Sets the manufacturer, product, and serial strings in vec format.
+fn set_string_descriptors(info: &HwInfo, data: &mut Vec<u8>) -> Error {
+    let mlen = info.manufact.len();
+    let plen = info.product.len();
+    let slen = info.serial.len();
+
+    if mlen > MAX_STR_SIZE || plen > MAX_STR_SIZE || slen > MAX_STR_SIZE {
+        return get_err_msg(-16);
+    }
+
+    let mut pos = STR_OFFSET_START;
+    let strings = [&info.manufact, &info.product, &info.serial];
+    for s in strings.iter() {
+        data[pos] = ((s.len() * 2) + 2) as u8;
+        data[pos + 1] = 0x03u8;
+        pos += 2;
+
+        for b in s.as_bytes().iter() {
+            data[pos] = *b;
+            data[pos + 1] = 0x00u8;
+            pos += 2;
+        }
+    }
+
+    return get_err_msg(0);
 }
 
 impl Device {
@@ -523,7 +557,7 @@ impl Device {
 
     }
 
-    /// GetHwInfo gets the dongle's information items.
+    /// Gets the dongle's information items.
     pub fn get_hw_info(&self) -> (HwInfo, Error) {
         let mut have_serial = false;
         let mut remote_wakeup = false;
@@ -573,5 +607,38 @@ impl Device {
         };
 
         (info, err)
+    }
+
+    /// Sets the dongle's information items.
+    pub fn set_hw_info(&self, info: &HwInfo) -> Error {
+        let mlen = info.manufact.len();
+        let plen = info.product.len();
+        let slen = info.serial.len();
+        let stored_len = STR_OFFSET_START + ((2 * mlen) + 2) + ((2 * plen) + 2) + ((2 * slen) + 2);
+        let mut data = vec![0u8; stored_len];
+
+        data[0] = 0x28u8;
+        data[1] = 0x32u8;
+        data[2] = info.vendor_id as u8;
+        data[3] = (info.vendor_id >> 8) as u8;
+        data[4] = info.product_id as u8;
+        data[5] = (info.product_id >> 8) as u8;
+
+        if info.have_serial == true {
+            data[6] = 0xA5u8;
+        }
+        if info.remote_wakeup == true {
+            data[7] = data[7] | 0x01;
+        }
+        if info.enable_ir == true {
+            data[7] = data[7] | 0x02;
+        }
+
+        let mut err = set_string_descriptors(&info, &mut data);
+        if let Some(Error::NoError) = Some(err) {
+            err = self.write_eeprom(data, 0);
+        }
+
+        return err;
     }
 }
