@@ -1,5 +1,3 @@
-#![allow(non_camel_case_types, non_snake_case)]
-
 extern crate rtlsdr;
 
 use std::os::raw::{c_void, c_uchar};
@@ -8,8 +6,6 @@ use rtlsdr::Error;
 use std::time::Duration;
 use std::thread;
 
-
-pub type uint32_t = u32;
 
 fn sdr_config(dev: &rtlsdr::Device) -> Error {
     let (m, p, s, mut err) = dev.get_usb_strings();
@@ -116,7 +112,7 @@ fn sdr_config(dev: &rtlsdr::Device) -> Error {
     Error::NoError
 }
 
-unsafe extern "C" fn read_async_callback(buf: *mut c_uchar, len: uint32_t, ctx: *mut c_void) {
+unsafe extern "C" fn read_async_callback(buf: *mut c_uchar, len: u32, ctx: *mut c_void) {
     let _ = ctx;
     let v =Vec::<u8>::from_raw_parts(buf, len as usize, len as usize);
     println!("----- read_async_callback buffer size - {}", len);
@@ -155,9 +151,9 @@ fn main() {
 
     println!("calling read_sync...");
     for i in 0..10 {
-        let (_, read_count, err) = dev.read_sync(rtlsdr::DefaultBufLength);
+        let (_, read_count, err) = dev.read_sync(rtlsdr::DEFAULT_BUF_LENGTH);
         println!("----- read_sync requested iteration {} -----", i);
-        println!("\tread_sync requested - {}", rtlsdr::DefaultBufLength);
+        println!("\tread_sync requested - {}", rtlsdr::DEFAULT_BUF_LENGTH);
         println!("\tread_sync received  - {}", read_count);
         println!("\tread_sync err msg   - {:?}", err);
     }
@@ -175,8 +171,8 @@ fn main() {
     println!("calling read_async...");
     err = dev.read_async(Some(read_async_callback),
                         ptr::null_mut(),
-                        rtlsdr::DefaultAsyncBufNumber,
-                        rtlsdr::DefaultBufLength);
+                        rtlsdr::DEFAULT_ASYNC_BUF_NUMBER,
+                        rtlsdr::DEFAULT_BUF_LENGTH);
     match err {
         Error::NoError => println!("device close successful..."),
         _ => println!("dev close error - {:?}", err),
