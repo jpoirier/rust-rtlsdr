@@ -31,8 +31,8 @@ pub const LIBUSB_ERROR_OTHER: i32 = -99;
 pub const EEPROM_SIZE: i32 = 256;
 // MAX_STR_SIZE = (max string length - 2 (header bytes)) \ 2. Where each
 // info character is followed by a null char.
-pub const MAX_STR_SIZE: i32 = 35;
-pub const STR_OFFSET_START: i32 = 0x09;
+pub const MAX_STR_SIZE: usize = 35;
+pub const STR_OFFSET_START: usize = 0x09;
 
 enum RTLSDRDev { }
 type RTLSDRDevT = RTLSDRDev;
@@ -44,6 +44,18 @@ pub struct Device {
 
 unsafe impl Send for Device {}
 unsafe impl Sync for Device {}
+
+// HwInfo holds dongle specific information.
+pub struct HwInfo {
+    vendor_id: u16,
+    product_id: u16,
+    manufact: String,
+    product: String,
+    serial: String,
+    have_serial: bool,
+    enable_ir: bool,
+    remote_wakeup: bool,
+}
 
 
 #[derive(Copy, Clone)]
@@ -75,13 +87,16 @@ pub enum Error {
     Interrupted,
     NoMem,
     NotSupported,
+    NoValidEEPROMHeader,
+    StringValueTooLong,
+    StringDescriptorInvalid,
     Other,
 }
 
+
+
 /// read async callabck function
-pub type ReadAsyncCbT = Option<unsafe extern "C" fn(buf: *mut c_uchar,
-                                                              len: u32,
-                                                              ctx: *mut c_void)>;
+pub type ReadAsyncCbT = Option<unsafe extern "C" fn(buf: *mut c_uchar, len: u32, ctx: *mut c_void)>;
 
 #[link(name = "rtlsdr")]
 extern "C" {
@@ -96,10 +111,7 @@ extern "C" {
 
     fn rtlsdr_open(dev: *mut *mut RTLSDRDevT, index: u32) -> c_int;
     fn rtlsdr_close(dev: *mut RTLSDRDevT) -> c_int;
-    fn rtlsdr_set_xtal_freq(dev: *mut RTLSDRDevT,
-                            rtl_freq: u32,
-                            tuner_freq: u32)
-                            -> c_int;
+    fn rtlsdr_set_xtal_freq(dev: *mut RTLSDRDevT, rtl_freq: u32, tuner_freq: u32) -> c_int;
     fn rtlsdr_get_xtal_freq(dev: *mut RTLSDRDevT,
                             rtl_freq: *mut u32,
                             tuner_freq: *mut u32)
@@ -109,16 +121,8 @@ extern "C" {
                               product: *mut c_char,
                               serial: *mut c_char)
                               -> c_int;
-    fn rtlsdr_write_eeprom(dev: *mut RTLSDRDevT,
-                           data: *mut u8,
-                           offset: u8,
-                           len: u16)
-                           -> c_int;
-    fn rtlsdr_read_eeprom(dev: *mut RTLSDRDevT,
-                          data: *mut u8,
-                          offset: u8,
-                          len: u16)
-                          -> c_int;
+    fn rtlsdr_write_eeprom(dev: *mut RTLSDRDevT, data: *mut u8, offset: u8, len: u16) -> c_int;
+    fn rtlsdr_read_eeprom(dev: *mut RTLSDRDevT, data: *mut u8, offset: u8, len: u16) -> c_int;
     fn rtlsdr_set_center_freq(dev: *mut RTLSDRDevT, freq: u32) -> c_int;
     fn rtlsdr_get_center_freq(dev: *mut RTLSDRDevT) -> c_int;
     fn rtlsdr_set_freq_correction(dev: *mut RTLSDRDevT, ppm: c_int) -> c_int;
@@ -144,10 +148,7 @@ extern "C" {
                         len: c_int,
                         n_read: *mut c_int)
                         -> c_int;
-    fn rtlsdr_wait_async(dev: *mut RTLSDRDevT,
-                         cb: ReadAsyncCbT,
-                         ctx: *mut c_void)
-                         -> c_int;
+    fn rtlsdr_wait_async(dev: *mut RTLSDRDevT, cb: ReadAsyncCbT, ctx: *mut c_void) -> c_int;
     fn rtlsdr_read_async(dev: *mut RTLSDRDevT,
                          cb: ReadAsyncCbT,
                          ctx: *mut c_void,
@@ -173,6 +174,9 @@ fn get_err_msg(e: c_int) -> Error {
         -10 => Interrupted,
         -11 => NoMem,
         -12 => NotSupported,
+        -13 => NoValidEEPROMHeader,
+        -14 => StringValueTooLong,
+        -15 => StringDescriptorInvalid,
         _ => Other,
     }
 }
@@ -202,9 +206,7 @@ pub fn get_device_count() -> i32 {
 
 /// Returns the name of the device by index.
 pub fn get_device_name(index: i32) -> String {
-    unsafe {
-        CStr::from_ptr(rtlsdr_get_device_name(index as u32)).to_string_lossy().into_owned()
-    }
+    unsafe { CStr::from_ptr(rtlsdr_get_device_name(index as u32)).to_string_lossy().into_owned() }
 }
 
 /// Returns the information of a device by index.
@@ -235,6 +237,33 @@ pub fn open(index: i32) -> (Arc<Device>, Error) {
     }
 }
 
+/// GetStringDescriptors gets the manufacturer, product, and serial
+/// strings from the hardware's eeprom.
+pub fn get_string_descriptors(data: &Vec<u8>) -> (String, String, String, Error) {
+    let mut pos = STR_OFFSET_START;
+    let mut strings: Vec<String> = Vec::new();
+
+    for _ in 0..3 {
+        let l = data[pos] as usize;
+        if l > (MAX_STR_SIZE * 2) as usize + 2 {
+            return ("".to_string(), "".to_string(), "".to_string(), get_err_msg(-14));
+        }
+        if data[pos + 1] != 0x03 {
+            return ("".to_string(), "".to_string(), "".to_string(), get_err_msg(-15));
+        }
+
+        let mut j: usize = 2;
+        let mut s = String::new();
+        while j < l {
+            s.push(data[pos + j] as char);
+            j += 2;
+        }
+        strings.push(s);
+        pos += j;
+    }
+    (strings[0].clone(), strings[1].clone(), strings[2].clone(), get_err_msg(0))
+}
+
 impl Device {
     /// Closes the device.
     pub fn close(&self) -> Error {
@@ -251,9 +280,7 @@ impl Device {
     /// Note, call this function only if you fully understand the implications.
     pub fn set_xtal_freq(&self, rtl_freq_hz: i32, tuner_freq_hz: i32) -> Error {
         unsafe {
-            get_err_msg(rtlsdr_set_xtal_freq(self.dev,
-                                             rtl_freq_hz as u32,
-                                             tuner_freq_hz as u32))
+            get_err_msg(rtlsdr_set_xtal_freq(self.dev, rtl_freq_hz as u32, tuner_freq_hz as u32))
         }
     }
 
@@ -345,7 +372,11 @@ impl Device {
             println!("rtlsdr_get_tuner_gains count: {}", i);
             let mut v = vec![0; i as usize];
             i = rtlsdr_get_tuner_gains(self.dev, v.as_mut_ptr());
-            let err = if i <= 0 { Error::Other } else { Error::NoError };
+            let err = if i <= 0 {
+                Error::Other
+            } else {
+                Error::NoError
+            };
             (v, err)
         }
     }
@@ -490,5 +521,57 @@ impl Device {
     pub fn cancel_async(&self) -> Error {
         unsafe { get_err_msg(rtlsdr_cancel_async(self.dev)) }
 
+    }
+
+    /// GetHwInfo gets the dongle's information items.
+    pub fn get_hw_info(&self) -> (HwInfo, Error) {
+        let mut have_serial = false;
+        let mut remote_wakeup = false;
+        let mut enable_ir = false;
+        let mut vendor_id = 0u16;
+        let mut product_id = 0u16;
+        let mut m: String = "".to_string();
+        let mut p: String = "".to_string();
+        let mut s: String = "".to_string();
+
+        let (data, mut err) = self.read_eeprom(0, EEPROM_SIZE as u16);
+
+        if let Some(Error::NoError) = Some(err) {
+            if (data[0] != 0x28) || (data[1] != 0x32) {
+                err = get_err_msg(-13);
+            } else {
+                vendor_id = (data[3] as u16) << 8 | data[2] as u16;
+                product_id = (data[5] as u16) << 8 | data[4] as u16;
+
+                if data[6] == 0xA5 {
+                    have_serial = true;
+                }
+                if (data[7] & 0x01) == 0x01 {
+                    remote_wakeup = true;
+                }
+                if (data[7] & 0x02) == 0x02 {
+                    enable_ir = true;
+                }
+
+                let (mm, pp, ss, e) = get_string_descriptors(&data);
+                m = mm;
+                p = pp;
+                s = ss;
+                err = e;
+            }
+        }
+
+        let info = HwInfo {
+            have_serial: have_serial,
+            vendor_id: vendor_id,
+            product_id: product_id,
+            remote_wakeup: remote_wakeup,
+            enable_ir: enable_ir,
+            manufact: m,
+            product: p,
+            serial: s,
+        };
+
+        (info, err)
     }
 }

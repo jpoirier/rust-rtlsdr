@@ -16,7 +16,7 @@ fn sdr_config(dev: &rtlsdr::Device) -> Error {
     println!("m: {}, p: {}, s: {}, err: {:?}", m, p, s, err);
 
 
-    //---------- Get Tuner Gain ----------
+    // ---------- Get Tuner Gain ----------
     println!("get_tuner_type: {}", dev.get_tuner_type());
     err = dev.set_xtal_freq(28800000, 28800000);
     match err {
@@ -24,7 +24,7 @@ fn sdr_config(dev: &rtlsdr::Device) -> Error {
         _ => return err,
     };
 
-    //---------- Set Tuner Gain ----------
+    // ---------- Set Tuner Gain ----------
     err = dev.set_tuner_gain_mode(true);
     match err {
         Error::NoError => println!("set_tuner_gain_mode successful..."),
@@ -45,7 +45,7 @@ fn sdr_config(dev: &rtlsdr::Device) -> Error {
         _ => return err,
     };
 
-    //---------- Get/Set Sample Rate ----------
+    // ---------- Get/Set Sample Rate ----------
     let samplerate: i32 = 2083334;
     err = dev.set_sample_rate(samplerate);
     match err {
@@ -55,10 +55,14 @@ fn sdr_config(dev: &rtlsdr::Device) -> Error {
 
     println!("get_sample_rate {} successful...", dev.get_sample_rate());
 
-	//---------- Get/Set Xtal Freq ----------
+    // ---------- Get/Set Xtal Freq ----------
     let (mut rtl_freq, mut tuner_freq, mut err) = dev.get_xtal_freq();
     match err {
-        Error::NoError => println!("get_xtal_freq successful - rtl_freq: {}, tuner_freq: {}", rtl_freq, tuner_freq),
+        Error::NoError => {
+            println!("get_xtal_freq successful - rtl_freq: {}, tuner_freq: {}",
+                     rtl_freq,
+                     tuner_freq)
+        }
         _ => return err,
     };
 
@@ -67,11 +71,15 @@ fn sdr_config(dev: &rtlsdr::Device) -> Error {
 
     err = dev.set_xtal_freq(rtl_freq, tuner_freq);
     match err {
-        Error::NoError => println!("set_xtal_freq successful - rtl_freq: {}, tuner_freq: {}", rtl_freq, tuner_freq),
+        Error::NoError => {
+            println!("set_xtal_freq successful - rtl_freq: {}, tuner_freq: {}",
+                     rtl_freq,
+                     tuner_freq)
+        }
         _ => return err,
     };
 
-	//---------- Get/Set Center Freq ----------
+    // ---------- Get/Set Center Freq ----------
     err = dev.set_center_freq(978000000);
     match err {
         Error::NoError => println!("set_center_freq successful - 978000000"),
@@ -80,7 +88,7 @@ fn sdr_config(dev: &rtlsdr::Device) -> Error {
 
     println!("get_center_freq: {}", dev.get_center_freq());
 
-	//---------- Set Tuner Bandwidth ----------
+    // ---------- Set Tuner Bandwidth ----------
     let bw: i32 = 1000000;
     println!("Setting bandwidth: {}", bw);
 
@@ -90,14 +98,14 @@ fn sdr_config(dev: &rtlsdr::Device) -> Error {
         _ => return err,
     };
 
-	//---------- Buffer Reset ----------
+    // ---------- Buffer Reset ----------
     err = dev.reset_buffer();
     match err {
         Error::NoError => println!("reset_buffer successful..."),
         _ => return err,
     };
 
-	//---------- Get/Set Freq Correction ----------
+    // ---------- Get/Set Freq Correction ----------
     let mut freq_corr = dev.get_freq_correction();
     println!("get_freq_correction - {}", freq_corr);
 
@@ -108,20 +116,26 @@ fn sdr_config(dev: &rtlsdr::Device) -> Error {
         _ => return err,
     };
 
-    //----------  ----------
+    // ----------  ----------
     Error::NoError
 }
 
 unsafe extern "C" fn read_async_callback(buf: *mut c_uchar, len: u32, ctx: *mut c_void) {
     let _ = ctx;
-    let v =Vec::<u8>::from_raw_parts(buf, len as usize, len as usize);
+    let v = Vec::<u8>::from_raw_parts(buf, len as usize, len as usize);
     println!("----- read_async_callback buffer size - {}", len);
-    println!("----- {} {} {} {} {} {}", v[0], v[1], v[2], v[3], v[4], v[5]);
+    println!("----- {} {} {} {} {} {}",
+             v[0],
+             v[1],
+             v[2],
+             v[3],
+             v[4],
+             v[5]);
 }
 
 
 fn main() {
-    //---------- Device Check ----------
+    // ---------- Device Check ----------
     let count = rtlsdr::get_device_count();
     if count == 0 {
         println!("No devices found, exiting.");
@@ -134,7 +148,9 @@ fn main() {
     }
 
     let index = 0;
-    println!("===== Device name, index {}: {} =====", index, rtlsdr::get_device_name(0));
+    println!("===== Device name, index {}: {} =====",
+             index,
+             rtlsdr::get_device_name(0));
     println!("===== Running tests using device indx: 0 =====\n");
 
     let (dev, mut err) = rtlsdr::open(index);
@@ -170,9 +186,9 @@ fn main() {
 
     println!("calling read_async...");
     err = dev.read_async(Some(read_async_callback),
-                        ptr::null_mut(),
-                        rtlsdr::DEFAULT_ASYNC_BUF_NUMBER,
-                        rtlsdr::DEFAULT_BUF_LENGTH);
+                         ptr::null_mut(),
+                         rtlsdr::DEFAULT_ASYNC_BUF_NUMBER,
+                         rtlsdr::DEFAULT_BUF_LENGTH);
     match err {
         Error::NoError => println!("device close successful..."),
         _ => println!("dev close error - {:?}", err),
