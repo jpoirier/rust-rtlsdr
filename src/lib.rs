@@ -53,14 +53,14 @@ unsafe impl Sync for Device {}
 // HwInfo holds dongle specific information.
 #[derive(Debug)]
 pub struct HwInfo {
-    vendor_id: u16,
-    product_id: u16,
-    manufact: String,
-    product: String,
-    serial: String,
-    have_serial: bool,
-    enable_ir: bool,
-    remote_wakeup: bool,
+    pub vendor_id: u16,
+    pub product_id: u16,
+    pub manufact: String,
+    pub product: String,
+    pub serial: String,
+    pub have_serial: bool,
+    pub enable_ir: bool,
+    pub remote_wakeup: bool,
 }
 
 #[derive(Copy, Clone)]
@@ -352,10 +352,14 @@ impl Device {
     /// Writes data to the EEPROM.
     pub fn write_eeprom(&self, data: Vec<u8>, offset: u8) -> Error {
         unsafe {
-            get_err_msg(rtlsdr_write_eeprom(self.dev,
-                                            data.as_ptr() as *mut u8,
-                                            offset,
-                                            data.len() as u16))
+            let mut err = rtlsdr_write_eeprom(self.dev,
+                                              data.as_ptr() as *mut u8,
+                                              offset,
+                                              data.len() as u16);
+            if err >= 0 {
+                err = 0;
+            }
+            get_err_msg(err)
         }
     }
 
@@ -363,7 +367,10 @@ impl Device {
     pub fn read_eeprom(&self, offset: u8, len: u16) -> (Vec<u8>, Error) {
         let mut v = vec![0u8; len as usize];
         unsafe {
-            let err = rtlsdr_read_eeprom(self.dev, v.as_mut_ptr() as *mut u8, offset, len);
+            let mut err = rtlsdr_read_eeprom(self.dev, v.as_mut_ptr() as *mut u8, offset, len);
+            if err >= 0 {
+                err = 0;
+            }
             (v, get_err_msg(err))
         }
 
@@ -569,6 +576,7 @@ impl Device {
         let mut s: String = "".to_string();
 
         let (data, mut err) = self.read_eeprom(0, EEPROM_SIZE as u16);
+        // println!("eeprom data: {:?}, error: {:?}", data, err);
 
         if let Some(Error::NoError) = Some(err) {
             if (data[0] != 0x28) || (data[1] != 0x32) {
@@ -576,6 +584,7 @@ impl Device {
             } else {
                 vendor_id = (data[3] as u16) << 8 | data[2] as u16;
                 product_id = (data[5] as u16) << 8 | data[4] as u16;
+                // println!("vendor_id {}, product_id {}", vendor_id, product_id);
 
                 if data[6] == 0xA5 {
                     have_serial = true;

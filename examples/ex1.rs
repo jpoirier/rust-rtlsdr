@@ -13,16 +13,49 @@ fn sdr_config(dev: &rtlsdr::Device) -> Error {
         Error::NoError => println!("set_xtal_freq successful"),
         _ => return err,
     };
-    println!("m: {}, p: {}, s: {}, err: {:?}", m, p, s, err);
+    println!("m: {}\n p: {}\n s: {}\n err: {:?}\n", m, p, s, err);
 
+    // ---------- Get/Set/Get Hardware Info ----------
+    println!("1. Getting hardware info...");
+    let (mut hw_info, mut err) = dev.get_hw_info();
+
+    println!("Error: {:?}", err);
+    println!("Vendor ID:             {:?}", hw_info.vendor_id);
+    println!("Product ID:            {:?}", hw_info.product_id);
+    println!("Manufacturer:          {:?}", hw_info.manufact);
+    println!("Product:               {:?}", hw_info.product);
+    println!("Serial number:         {:?}", hw_info.serial);
+    println!("Serial number enabled: {:?}", hw_info.have_serial);
+    println!("IR endpoint enabled:   {:?}", hw_info.enable_ir);
+    println!("Remote wakeup enabled: {:?}", hw_info.remote_wakeup);
+    println!("");
+
+    println!("Writing hardware info...");
+    err = dev.set_hw_info(&hw_info);
+    println!("Writing hardware info return message: {:?}\n", err);
+
+    println!("2. Getting hardware info...");
+    let (hw_info, mut err) = dev.get_hw_info();
+
+    println!("Error: {:?}", err);
+    println!("Vendor ID:             {:?}", hw_info.vendor_id);
+    println!("Product ID:            {:?}", hw_info.product_id);
+    println!("Manufacturer:          {:?}", hw_info.manufact);
+    println!("Product:               {:?}", hw_info.product);
+    println!("Serial number:         {:?}", hw_info.serial);
+    println!("Serial number enabled: {:?}", hw_info.have_serial);
+    println!("IR endpoint enabled:   {:?}", hw_info.enable_ir);
+    println!("Remote wakeup enabled: {:?}", hw_info.remote_wakeup);
+    println!("");
 
     // ---------- Get Tuner Gain ----------
     println!("get_tuner_type: {}", dev.get_tuner_type());
     err = dev.set_xtal_freq(28800000, 28800000);
     match err {
-        Error::NoError => println!("get_tuner_type successful - 28800000"),
+        Error::NoError => println!("set_xtal_freq - 28800000"),
         _ => return err,
     };
+    println!("");
 
     // ---------- Set Tuner Gain ----------
     err = dev.set_tuner_gain_mode(true);
@@ -37,13 +70,14 @@ fn sdr_config(dev: &rtlsdr::Device) -> Error {
         _ => println!("get_tuner_gains failed - {:?}", err), // return err,
     };
 
-    println!("tuner gains:  {:?}", gains);
+    println!("\ntuner gains:  {:?}\n", gains);
 
     err = dev.set_tuner_gain(gains[2]);
     match err {
-        Error::NoError => println!("set_tuner_gain successful..."),
+        Error::NoError => println!("set_tuner_gain {:?} successful...", gains[2]),
         _ => return err,
     };
+    println!("");
 
     // ---------- Get/Set Sample Rate ----------
     let samplerate: i32 = 2083334;
@@ -53,7 +87,7 @@ fn sdr_config(dev: &rtlsdr::Device) -> Error {
         _ => return err,
     };
 
-    println!("get_sample_rate {} successful...", dev.get_sample_rate());
+    println!("get_sample_rate {} successful...\n", dev.get_sample_rate());
 
     // ---------- Get/Set Xtal Freq ----------
     let (mut rtl_freq, mut tuner_freq, mut err) = dev.get_xtal_freq();
@@ -78,6 +112,7 @@ fn sdr_config(dev: &rtlsdr::Device) -> Error {
         }
         _ => return err,
     };
+    println!("");
 
     // ---------- Get/Set Center Freq ----------
     err = dev.set_center_freq(978000000);
@@ -86,7 +121,7 @@ fn sdr_config(dev: &rtlsdr::Device) -> Error {
         _ => return err,
     };
 
-    println!("get_center_freq: {}", dev.get_center_freq());
+    println!("get_center_freq: {}\n", dev.get_center_freq());
 
     // ---------- Set Tuner Bandwidth ----------
     let bw: i32 = 1000000;
@@ -97,6 +132,7 @@ fn sdr_config(dev: &rtlsdr::Device) -> Error {
         Error::NoError => println!("set_tuner_bandwidth {} Successful", bw),
         _ => return err,
     };
+    println!("");
 
     // ---------- Buffer Reset ----------
     err = dev.reset_buffer();
@@ -115,7 +151,7 @@ fn sdr_config(dev: &rtlsdr::Device) -> Error {
         Error::NoError => println!("set_freq_correction successful - {}", freq_corr),
         _ => return err,
     };
-
+    println!("");
     // ----------  ----------
     Error::NoError
 }
