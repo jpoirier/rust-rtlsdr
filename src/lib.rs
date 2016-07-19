@@ -1,3 +1,6 @@
+// Copyright (c) 2016 Joseph D Poirier <jdpoirier@gmail.com>
+// Licensed under the MIT License <LICENSE.md>
+
 #![allow(dead_code)]
 use std::sync::Arc;
 use std::os::raw::{c_int, c_void, c_uchar, c_char};
@@ -9,12 +12,13 @@ use std::str;
 
 
 // TODO:
-// - fix the magic numbers
 // - better way to handle errors
-// - String vs str?
-// - test get/set_hw_info and friends
+// - String vs str
+// - proper documentation
+// - tests
+// - read more Rust code, learn more Rust, make this lib better
 
-// Sampling modes.
+/// Sampling modes.
 pub enum SamplingMode {
     None = 0,
     IADC = 1,
@@ -22,6 +26,7 @@ pub enum SamplingMode {
     Unknown = 3,
 }
 
+// Convenience constants
 // pub const DefaultGain: String = "auto";
 pub const DEFAULT_FC: i32 = 80_000_000;
 pub const DEFAULT_RS: i32 = 1_024_000;
@@ -32,12 +37,19 @@ pub const DEFAULT_ASYNC_BUF_NUMBER: i32 = 32;
 pub const DEFAULT_BUF_LENGTH: i32 = (16 * 16384);
 pub const MIN_BUF_LENGTH: i32 = 512;
 pub const MAX_BUF_LENGTH: i32 = (256 * 16384);
-pub const LIBUSB_ERROR_OTHER: i32 = -99;
-pub const EEPROM_SIZE: i32 = 256;
-// MAX_STR_SIZE = (max string length - 2 (header bytes)) \ 2. Where each
-// info character is followed by a null char.
+/// Hardware info strings (product, manufacturer, serial) maximum size.
+/// MAX_STR_SIZE = (max string length - 2 (header bytes)) \ 2. Where each
+/// info character is followed by a null character.
 pub const MAX_STR_SIZE: usize = 35;
-pub const STR_OFFSET_START: usize = 0x09;
+
+// EEPROM stored device information starts after the header bytes.
+const STR_OFFSET_START: usize = 0x09;
+const EEPROM_SIZE: i32 = 256;
+const NO_VALID_EEPROM_HEADER: i32 = -13;
+const STRING_VALUE_TOO_LONG: i32 = -14;
+const STRING_DESCRIPTOR_INVALID: i32 = -15;
+const STRING__DESCRIPTOR_TOO_LONG: i32 = -16;
+const LIBUSB_ERROR_OTHER: i32 = -99;
 
 enum RTLSDRDev { }
 type RTLSDRDevT = RTLSDRDev;
@@ -101,7 +113,7 @@ pub enum Error {
 
 
 
-/// read async callabck function
+/// read async callback function
 pub type ReadAsyncCbT = Option<unsafe extern "C" fn(buf: *mut c_uchar, len: u32, ctx: *mut c_void)>;
 
 #[link(name = "rtlsdr")]
@@ -180,10 +192,10 @@ fn get_err_msg(e: c_int) -> Error {
         -10 => Interrupted,
         -11 => NoMem,
         -12 => NotSupported,
-        -13 => NoValidEEPROMHeader,
-        -14 => StringValueTooLong,
-        -15 => StringDescriptorInvalid,
-        -16 => StringDescriptorTooLong,
+        NO_VALID_EEPROM_HEADER => NoValidEEPROMHeader,
+        STRING_VALUE_TOO_LONG => StringValueTooLong,
+        STRING_DESCRIPTOR_INVALID => StringDescriptorInvalid,
+        STRING__DESCRIPTOR_TOO_LONG => StringDescriptorTooLong,
         _ => Other,
     }
 }
@@ -244,8 +256,7 @@ pub fn open(index: i32) -> (Arc<Device>, Error) {
     }
 }
 
-/// Gets the manufacturer, product, and serial
-/// strings from data.
+/// Gets the manufacturer, product, and serial strings from data.
 fn get_string_descriptors(data: &Vec<u8>) -> (String, String, String, Error) {
     let mut pos = STR_OFFSET_START;
     let mut strings: Vec<String> = Vec::new();
@@ -253,10 +264,16 @@ fn get_string_descriptors(data: &Vec<u8>) -> (String, String, String, Error) {
     for _ in 0..3 {
         let l = data[pos] as usize;
         if l > (MAX_STR_SIZE * 2) as usize + 2 {
-            return ("".to_string(), "".to_string(), "".to_string(), get_err_msg(-14));
+            return ("".to_string(),
+                    "".to_string(),
+                    "".to_string(),
+                    get_err_msg(STRING_VALUE_TOO_LONG));
         }
         if data[pos + 1] != 0x03 {
-            return ("".to_string(), "".to_string(), "".to_string(), get_err_msg(-15));
+            return ("".to_string(),
+                    "".to_string(),
+                    "".to_string(),
+                    get_err_msg(STRING_DESCRIPTOR_INVALID));
         }
 
         let mut j: usize = 2;
@@ -278,7 +295,7 @@ fn set_string_descriptors(info: &HwInfo, data: &mut Vec<u8>) -> Error {
     let slen = info.serial.len();
 
     if mlen > MAX_STR_SIZE || plen > MAX_STR_SIZE || slen > MAX_STR_SIZE {
-        return get_err_msg(-16);
+        return get_err_msg(STRING__DESCRIPTOR_TOO_LONG);
     }
 
     let mut pos = STR_OFFSET_START;
@@ -299,7 +316,7 @@ fn set_string_descriptors(info: &HwInfo, data: &mut Vec<u8>) -> Error {
 }
 
 impl Device {
-    /// Closes the device.
+    /// Close the device.
     pub fn close(&self) -> Error {
         unsafe { get_err_msg(rtlsdr_close(self.dev)) }
     }
@@ -349,7 +366,7 @@ impl Device {
         }
     }
 
-    /// Writes data to the EEPROM.
+    /// Writes information data to the EEPROM.
     pub fn write_eeprom(&self, data: Vec<u8>, offset: u8) -> Error {
         unsafe {
             let mut err = rtlsdr_write_eeprom(self.dev,
@@ -363,7 +380,7 @@ impl Device {
         }
     }
 
-    /// Returns data read from the EEPROM.
+    /// Returns information data read from the EEPROM.
     pub fn read_eeprom(&self, offset: u8, len: u16) -> (Vec<u8>, Error) {
         let mut v = vec![0u8; len as usize];
         unsafe {
@@ -424,7 +441,7 @@ impl Device {
 
     /// Sets the tuner gain. Note, manual gain mode
     /// must be enabled for this to work. Valid gain values may be
-    /// queried using GetTunerGains.
+    /// queried using get_tuner_gains.
     ///
     /// Valid values (in tenths of a dB) are:
     /// -10, 15, 40, 65, 90, 115, 140, 165, 190, 215, 240, 290,
@@ -492,7 +509,7 @@ impl Device {
     /// Sets the direct sampling mode.
     ///
     /// When enabled, the IF mode of the device is activated, and
-    /// SetCenterFreq() will control the IF-frequency of the DDC, which
+    /// set_center_freq() will control the IF-frequency of the DDC, which
     /// can be used to tune from 0 to 28.8 MHz (xtal frequency of the device).
     pub fn set_direct_sampling(&self, mode: SamplingMode) -> Error {
         unsafe { get_err_msg(rtlsdr_set_direct_sampling(self.dev, mode as i32)) }
@@ -541,14 +558,14 @@ impl Device {
 
     }
 
-    /// Reads samples asynchronously. Note, this function
-    /// will block until canceled using CancelAsync. ReadAsyncCbT is
-    /// a package global variable.
+    /// Reads samples asynchronously. Note, this function will block until
+    /// canceled using cancel_async. ReadAsyncCbT is a package global variable.
     ///
-    /// Optional bufNum buffer count, bufNum * bufLen = overall buffer size,
-    /// set to 0 for default buffer count (32).
-    /// Optional bufLen buffer length, must be multiple of 512, set to 0 for
-    /// default buffer length (16 * 32 * 512).
+    /// Optional buf_num buffer count, buf_num * buf_len = overall buffer size,
+    /// set to 0 for default buffer count of 32.
+    ///
+    /// Optional buf_len buffer length, must be multiple of 512, set to 0 for
+    /// default buffer length of 262,144 (16 * 32 * 512).
     pub fn read_async(&self,
                       f: ReadAsyncCbT,
                       ctx: *mut c_void,
@@ -580,7 +597,7 @@ impl Device {
 
         if let Some(Error::NoError) = Some(err) {
             if (data[0] != 0x28) || (data[1] != 0x32) {
-                err = get_err_msg(-13);
+                err = get_err_msg(NO_VALID_EEPROM_HEADER);
             } else {
                 vendor_id = (data[3] as u16) << 8 | data[2] as u16;
                 product_id = (data[5] as u16) << 8 | data[4] as u16;
@@ -618,7 +635,7 @@ impl Device {
         (info, err)
     }
 
-    /// Sets the dongle's information items.
+    /// SetCenterFreq the dongle's information items.
     pub fn set_hw_info(&self, info: &HwInfo) -> Error {
         let mlen = info.manufact.len();
         let plen = info.product.len();
