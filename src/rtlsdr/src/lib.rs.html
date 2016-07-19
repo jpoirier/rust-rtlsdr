@@ -695,7 +695,27 @@
 <span id="651">651</span>
 <span id="652">652</span>
 <span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
 </pre><pre class='rust '>
+<span class='comment'>// Copyright (c) 2016 Joseph D Poirier &lt;jdpoirier@gmail.com&gt;</span>
+<span class='comment'>// Licensed under the MIT License &lt;LICENSE.md&gt;</span>
+
 <span class='attribute'>#<span class='op'>!</span>[<span class='ident'>allow</span>(<span class='ident'>dead_code</span>)]</span>
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>sync</span>::<span class='ident'>Arc</span>;
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>os</span>::<span class='ident'>raw</span>::{<span class='ident'>c_int</span>, <span class='ident'>c_void</span>, <span class='ident'>c_uchar</span>, <span class='ident'>c_char</span>};
@@ -707,12 +727,13 @@
 
 
 <span class='comment'>// TODO:</span>
-<span class='comment'>// - fix the magic numbers</span>
 <span class='comment'>// - better way to handle errors</span>
-<span class='comment'>// - String vs str?</span>
-<span class='comment'>// - test get/set_hw_info and friends</span>
+<span class='comment'>// - String vs str</span>
+<span class='comment'>// - proper documentation</span>
+<span class='comment'>// - tests</span>
+<span class='comment'>// - read more Rust code, learn more Rust, make this lib better</span>
 
-<span class='comment'>// Sampling modes.</span>
+<span class='doccomment'>/// Sampling modes.</span>
 <span class='kw'>pub</span> <span class='kw'>enum</span> <span class='ident'>SamplingMode</span> {
     <span class='prelude-val'>None</span> <span class='op'>=</span> <span class='number'>0</span>,
     <span class='ident'>IADC</span> <span class='op'>=</span> <span class='number'>1</span>,
@@ -720,6 +741,7 @@
     <span class='ident'>Unknown</span> <span class='op'>=</span> <span class='number'>3</span>,
 }
 
+<span class='comment'>// Convenience constants</span>
 <span class='comment'>// pub const DefaultGain: String = &quot;auto&quot;;</span>
 <span class='kw'>pub</span> <span class='kw'>const</span> <span class='ident'>DEFAULT_FC</span>: <span class='ident'>i32</span> <span class='op'>=</span> <span class='number'>80_000_000</span>;
 <span class='kw'>pub</span> <span class='kw'>const</span> <span class='ident'>DEFAULT_RS</span>: <span class='ident'>i32</span> <span class='op'>=</span> <span class='number'>1_024_000</span>;
@@ -730,12 +752,19 @@
 <span class='kw'>pub</span> <span class='kw'>const</span> <span class='ident'>DEFAULT_BUF_LENGTH</span>: <span class='ident'>i32</span> <span class='op'>=</span> (<span class='number'>16</span> <span class='op'>*</span> <span class='number'>16384</span>);
 <span class='kw'>pub</span> <span class='kw'>const</span> <span class='ident'>MIN_BUF_LENGTH</span>: <span class='ident'>i32</span> <span class='op'>=</span> <span class='number'>512</span>;
 <span class='kw'>pub</span> <span class='kw'>const</span> <span class='ident'>MAX_BUF_LENGTH</span>: <span class='ident'>i32</span> <span class='op'>=</span> (<span class='number'>256</span> <span class='op'>*</span> <span class='number'>16384</span>);
-<span class='kw'>pub</span> <span class='kw'>const</span> <span class='ident'>LIBUSB_ERROR_OTHER</span>: <span class='ident'>i32</span> <span class='op'>=</span> <span class='op'>-</span><span class='number'>99</span>;
-<span class='kw'>pub</span> <span class='kw'>const</span> <span class='ident'>EEPROM_SIZE</span>: <span class='ident'>i32</span> <span class='op'>=</span> <span class='number'>256</span>;
-<span class='comment'>// MAX_STR_SIZE = (max string length - 2 (header bytes)) \ 2. Where each</span>
-<span class='comment'>// info character is followed by a null char.</span>
+<span class='doccomment'>/// Hardware info strings (product, manufacturer, serial) maximum size.</span>
+<span class='doccomment'>/// MAX_STR_SIZE = (max string length - 2 (header bytes)) \ 2. Where each</span>
+<span class='doccomment'>/// info character is followed by a null character.</span>
 <span class='kw'>pub</span> <span class='kw'>const</span> <span class='ident'>MAX_STR_SIZE</span>: <span class='ident'>usize</span> <span class='op'>=</span> <span class='number'>35</span>;
-<span class='kw'>pub</span> <span class='kw'>const</span> <span class='ident'>STR_OFFSET_START</span>: <span class='ident'>usize</span> <span class='op'>=</span> <span class='number'>0x09</span>;
+
+<span class='comment'>// EEPROM stored device information starts after the header bytes.</span>
+<span class='kw'>const</span> <span class='ident'>STR_OFFSET_START</span>: <span class='ident'>usize</span> <span class='op'>=</span> <span class='number'>0x09</span>;
+<span class='kw'>const</span> <span class='ident'>EEPROM_SIZE</span>: <span class='ident'>i32</span> <span class='op'>=</span> <span class='number'>256</span>;
+<span class='kw'>const</span> <span class='ident'>NO_VALID_EEPROM_HEADER</span>: <span class='ident'>i32</span> <span class='op'>=</span> <span class='op'>-</span><span class='number'>13</span>;
+<span class='kw'>const</span> <span class='ident'>STRING_VALUE_TOO_LONG</span>: <span class='ident'>i32</span> <span class='op'>=</span> <span class='op'>-</span><span class='number'>14</span>;
+<span class='kw'>const</span> <span class='ident'>STRING_DESCRIPTOR_INVALID</span>: <span class='ident'>i32</span> <span class='op'>=</span> <span class='op'>-</span><span class='number'>15</span>;
+<span class='kw'>const</span> <span class='ident'>STRING__DESCRIPTOR_TOO_LONG</span>: <span class='ident'>i32</span> <span class='op'>=</span> <span class='op'>-</span><span class='number'>16</span>;
+<span class='kw'>const</span> <span class='ident'>LIBUSB_ERROR_OTHER</span>: <span class='ident'>i32</span> <span class='op'>=</span> <span class='op'>-</span><span class='number'>99</span>;
 
 <span class='kw'>enum</span> <span class='ident'>RTLSDRDev</span> { }
 <span class='kw'>type</span> <span class='ident'>RTLSDRDevT</span> <span class='op'>=</span> <span class='ident'>RTLSDRDev</span>;
@@ -799,7 +828,7 @@
 
 
 
-<span class='doccomment'>/// read async callabck function</span>
+<span class='doccomment'>/// read async callback function</span>
 <span class='kw'>pub</span> <span class='kw'>type</span> <span class='ident'>ReadAsyncCbT</span> <span class='op'>=</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='kw'>unsafe</span> <span class='kw'>extern</span> <span class='string'>&quot;C&quot;</span> <span class='kw'>fn</span>(<span class='ident'>buf</span>: <span class='op'>*</span><span class='kw-2'>mut</span> <span class='ident'>c_uchar</span>, <span class='ident'>len</span>: <span class='ident'>u32</span>, <span class='ident'>ctx</span>: <span class='op'>*</span><span class='kw-2'>mut</span> <span class='ident'>c_void</span>)<span class='op'>&gt;</span>;
 
 <span class='attribute'>#[<span class='ident'>link</span>(<span class='ident'>name</span> <span class='op'>=</span> <span class='string'>&quot;rtlsdr&quot;</span>)]</span>
@@ -878,10 +907,10 @@
         <span class='op'>-</span><span class='number'>10</span> <span class='op'>=&gt;</span> <span class='ident'>Interrupted</span>,
         <span class='op'>-</span><span class='number'>11</span> <span class='op'>=&gt;</span> <span class='ident'>NoMem</span>,
         <span class='op'>-</span><span class='number'>12</span> <span class='op'>=&gt;</span> <span class='ident'>NotSupported</span>,
-        <span class='op'>-</span><span class='number'>13</span> <span class='op'>=&gt;</span> <span class='ident'>NoValidEEPROMHeader</span>,
-        <span class='op'>-</span><span class='number'>14</span> <span class='op'>=&gt;</span> <span class='ident'>StringValueTooLong</span>,
-        <span class='op'>-</span><span class='number'>15</span> <span class='op'>=&gt;</span> <span class='ident'>StringDescriptorInvalid</span>,
-        <span class='op'>-</span><span class='number'>16</span> <span class='op'>=&gt;</span> <span class='ident'>StringDescriptorTooLong</span>,
+        <span class='ident'>NO_VALID_EEPROM_HEADER</span> <span class='op'>=&gt;</span> <span class='ident'>NoValidEEPROMHeader</span>,
+        <span class='ident'>STRING_VALUE_TOO_LONG</span> <span class='op'>=&gt;</span> <span class='ident'>StringValueTooLong</span>,
+        <span class='ident'>STRING_DESCRIPTOR_INVALID</span> <span class='op'>=&gt;</span> <span class='ident'>StringDescriptorInvalid</span>,
+        <span class='ident'>STRING__DESCRIPTOR_TOO_LONG</span> <span class='op'>=&gt;</span> <span class='ident'>StringDescriptorTooLong</span>,
         _ <span class='op'>=&gt;</span> <span class='ident'>Other</span>,
     }
 }
@@ -942,8 +971,7 @@
     }
 }
 
-<span class='doccomment'>/// Gets the manufacturer, product, and serial</span>
-<span class='doccomment'>/// strings from data.</span>
+<span class='doccomment'>/// Gets the manufacturer, product, and serial strings from data.</span>
 <span class='kw'>fn</span> <span class='ident'>get_string_descriptors</span>(<span class='ident'>data</span>: <span class='kw-2'>&amp;</span><span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span>) <span class='op'>-&gt;</span> (<span class='ident'>String</span>, <span class='ident'>String</span>, <span class='ident'>String</span>, <span class='ident'>Error</span>) {
     <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>pos</span> <span class='op'>=</span> <span class='ident'>STR_OFFSET_START</span>;
     <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>strings</span>: <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>String</span><span class='op'>&gt;</span> <span class='op'>=</span> <span class='ident'>Vec</span>::<span class='ident'>new</span>();
@@ -951,10 +979,16 @@
     <span class='kw'>for</span> _ <span class='kw'>in</span> <span class='number'>0</span>..<span class='number'>3</span> {
         <span class='kw'>let</span> <span class='ident'>l</span> <span class='op'>=</span> <span class='ident'>data</span>[<span class='ident'>pos</span>] <span class='kw'>as</span> <span class='ident'>usize</span>;
         <span class='kw'>if</span> <span class='ident'>l</span> <span class='op'>&gt;</span> (<span class='ident'>MAX_STR_SIZE</span> <span class='op'>*</span> <span class='number'>2</span>) <span class='kw'>as</span> <span class='ident'>usize</span> <span class='op'>+</span> <span class='number'>2</span> {
-            <span class='kw'>return</span> (<span class='string'>&quot;&quot;</span>.<span class='ident'>to_string</span>(), <span class='string'>&quot;&quot;</span>.<span class='ident'>to_string</span>(), <span class='string'>&quot;&quot;</span>.<span class='ident'>to_string</span>(), <span class='ident'>get_err_msg</span>(<span class='op'>-</span><span class='number'>14</span>));
+            <span class='kw'>return</span> (<span class='string'>&quot;&quot;</span>.<span class='ident'>to_string</span>(),
+                    <span class='string'>&quot;&quot;</span>.<span class='ident'>to_string</span>(),
+                    <span class='string'>&quot;&quot;</span>.<span class='ident'>to_string</span>(),
+                    <span class='ident'>get_err_msg</span>(<span class='ident'>STRING_VALUE_TOO_LONG</span>));
         }
         <span class='kw'>if</span> <span class='ident'>data</span>[<span class='ident'>pos</span> <span class='op'>+</span> <span class='number'>1</span>] <span class='op'>!=</span> <span class='number'>0x03</span> {
-            <span class='kw'>return</span> (<span class='string'>&quot;&quot;</span>.<span class='ident'>to_string</span>(), <span class='string'>&quot;&quot;</span>.<span class='ident'>to_string</span>(), <span class='string'>&quot;&quot;</span>.<span class='ident'>to_string</span>(), <span class='ident'>get_err_msg</span>(<span class='op'>-</span><span class='number'>15</span>));
+            <span class='kw'>return</span> (<span class='string'>&quot;&quot;</span>.<span class='ident'>to_string</span>(),
+                    <span class='string'>&quot;&quot;</span>.<span class='ident'>to_string</span>(),
+                    <span class='string'>&quot;&quot;</span>.<span class='ident'>to_string</span>(),
+                    <span class='ident'>get_err_msg</span>(<span class='ident'>STRING_DESCRIPTOR_INVALID</span>));
         }
 
         <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>j</span>: <span class='ident'>usize</span> <span class='op'>=</span> <span class='number'>2</span>;
@@ -976,7 +1010,7 @@
     <span class='kw'>let</span> <span class='ident'>slen</span> <span class='op'>=</span> <span class='ident'>info</span>.<span class='ident'>serial</span>.<span class='ident'>len</span>();
 
     <span class='kw'>if</span> <span class='ident'>mlen</span> <span class='op'>&gt;</span> <span class='ident'>MAX_STR_SIZE</span> <span class='op'>||</span> <span class='ident'>plen</span> <span class='op'>&gt;</span> <span class='ident'>MAX_STR_SIZE</span> <span class='op'>||</span> <span class='ident'>slen</span> <span class='op'>&gt;</span> <span class='ident'>MAX_STR_SIZE</span> {
-        <span class='kw'>return</span> <span class='ident'>get_err_msg</span>(<span class='op'>-</span><span class='number'>16</span>);
+        <span class='kw'>return</span> <span class='ident'>get_err_msg</span>(<span class='ident'>STRING__DESCRIPTOR_TOO_LONG</span>);
     }
 
     <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>pos</span> <span class='op'>=</span> <span class='ident'>STR_OFFSET_START</span>;
@@ -997,7 +1031,7 @@
 }
 
 <span class='kw'>impl</span> <span class='ident'>Device</span> {
-    <span class='doccomment'>/// Closes the device.</span>
+    <span class='doccomment'>/// Close the device.</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>close</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>Error</span> {
         <span class='kw'>unsafe</span> { <span class='ident'>get_err_msg</span>(<span class='ident'>rtlsdr_close</span>(<span class='self'>self</span>.<span class='ident'>dev</span>)) }
     }
@@ -1047,7 +1081,7 @@
         }
     }
 
-    <span class='doccomment'>/// Writes data to the EEPROM.</span>
+    <span class='doccomment'>/// Writes information data to the EEPROM.</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>write_eeprom</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>data</span>: <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span>, <span class='ident'>offset</span>: <span class='ident'>u8</span>) <span class='op'>-&gt;</span> <span class='ident'>Error</span> {
         <span class='kw'>unsafe</span> {
             <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>rtlsdr_write_eeprom</span>(<span class='self'>self</span>.<span class='ident'>dev</span>,
@@ -1061,7 +1095,7 @@
         }
     }
 
-    <span class='doccomment'>/// Returns data read from the EEPROM.</span>
+    <span class='doccomment'>/// Returns information data read from the EEPROM.</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>read_eeprom</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>offset</span>: <span class='ident'>u8</span>, <span class='ident'>len</span>: <span class='ident'>u16</span>) <span class='op'>-&gt;</span> (<span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span>, <span class='ident'>Error</span>) {
         <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>v</span> <span class='op'>=</span> <span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>0u8</span>; <span class='ident'>len</span> <span class='kw'>as</span> <span class='ident'>usize</span>];
         <span class='kw'>unsafe</span> {
@@ -1122,7 +1156,7 @@
 
     <span class='doccomment'>/// Sets the tuner gain. Note, manual gain mode</span>
     <span class='doccomment'>/// must be enabled for this to work. Valid gain values may be</span>
-    <span class='doccomment'>/// queried using GetTunerGains.</span>
+    <span class='doccomment'>/// queried using get_tuner_gains.</span>
     <span class='doccomment'>///</span>
     <span class='doccomment'>/// Valid values (in tenths of a dB) are:</span>
     <span class='doccomment'>/// -10, 15, 40, 65, 90, 115, 140, 165, 190, 215, 240, 290,</span>
@@ -1190,7 +1224,7 @@
     <span class='doccomment'>/// Sets the direct sampling mode.</span>
     <span class='doccomment'>///</span>
     <span class='doccomment'>/// When enabled, the IF mode of the device is activated, and</span>
-    <span class='doccomment'>/// SetCenterFreq() will control the IF-frequency of the DDC, which</span>
+    <span class='doccomment'>/// set_center_freq() will control the IF-frequency of the DDC, which</span>
     <span class='doccomment'>/// can be used to tune from 0 to 28.8 MHz (xtal frequency of the device).</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>set_direct_sampling</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>mode</span>: <span class='ident'>SamplingMode</span>) <span class='op'>-&gt;</span> <span class='ident'>Error</span> {
         <span class='kw'>unsafe</span> { <span class='ident'>get_err_msg</span>(<span class='ident'>rtlsdr_set_direct_sampling</span>(<span class='self'>self</span>.<span class='ident'>dev</span>, <span class='ident'>mode</span> <span class='kw'>as</span> <span class='ident'>i32</span>)) }
@@ -1239,14 +1273,14 @@
 
     }
 
-    <span class='doccomment'>/// Reads samples asynchronously. Note, this function</span>
-    <span class='doccomment'>/// will block until canceled using CancelAsync. ReadAsyncCbT is</span>
-    <span class='doccomment'>/// a package global variable.</span>
+    <span class='doccomment'>/// Reads samples asynchronously. Note, this function will block until</span>
+    <span class='doccomment'>/// canceled using cancel_async. ReadAsyncCbT is a package global variable.</span>
     <span class='doccomment'>///</span>
-    <span class='doccomment'>/// Optional bufNum buffer count, bufNum * bufLen = overall buffer size,</span>
-    <span class='doccomment'>/// set to 0 for default buffer count (32).</span>
-    <span class='doccomment'>/// Optional bufLen buffer length, must be multiple of 512, set to 0 for</span>
-    <span class='doccomment'>/// default buffer length (16 * 32 * 512).</span>
+    <span class='doccomment'>/// Optional buf_num buffer count, buf_num * buf_len = overall buffer size,</span>
+    <span class='doccomment'>/// set to 0 for default buffer count of 32.</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// Optional buf_len buffer length, must be multiple of 512, set to 0 for</span>
+    <span class='doccomment'>/// default buffer length of 262,144 (16 * 32 * 512).</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>read_async</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>,
                       <span class='ident'>f</span>: <span class='ident'>ReadAsyncCbT</span>,
                       <span class='ident'>ctx</span>: <span class='op'>*</span><span class='kw-2'>mut</span> <span class='ident'>c_void</span>,
@@ -1278,7 +1312,7 @@
 
         <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Some</span>(<span class='ident'>Error</span>::<span class='ident'>NoError</span>) <span class='op'>=</span> <span class='prelude-val'>Some</span>(<span class='ident'>err</span>) {
             <span class='kw'>if</span> (<span class='ident'>data</span>[<span class='number'>0</span>] <span class='op'>!=</span> <span class='number'>0x28</span>) <span class='op'>||</span> (<span class='ident'>data</span>[<span class='number'>1</span>] <span class='op'>!=</span> <span class='number'>0x32</span>) {
-                <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>get_err_msg</span>(<span class='op'>-</span><span class='number'>13</span>);
+                <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>get_err_msg</span>(<span class='ident'>NO_VALID_EEPROM_HEADER</span>);
             } <span class='kw'>else</span> {
                 <span class='ident'>vendor_id</span> <span class='op'>=</span> (<span class='ident'>data</span>[<span class='number'>3</span>] <span class='kw'>as</span> <span class='ident'>u16</span>) <span class='op'>&lt;&lt;</span> <span class='number'>8</span> <span class='op'>|</span> <span class='ident'>data</span>[<span class='number'>2</span>] <span class='kw'>as</span> <span class='ident'>u16</span>;
                 <span class='ident'>product_id</span> <span class='op'>=</span> (<span class='ident'>data</span>[<span class='number'>5</span>] <span class='kw'>as</span> <span class='ident'>u16</span>) <span class='op'>&lt;&lt;</span> <span class='number'>8</span> <span class='op'>|</span> <span class='ident'>data</span>[<span class='number'>4</span>] <span class='kw'>as</span> <span class='ident'>u16</span>;
@@ -1316,7 +1350,7 @@
         (<span class='ident'>info</span>, <span class='ident'>err</span>)
     }
 
-    <span class='doccomment'>/// Sets the dongle&#39;s information items.</span>
+    <span class='doccomment'>/// SetCenterFreq the dongle&#39;s information items.</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>set_hw_info</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>info</span>: <span class='kw-2'>&amp;</span><span class='ident'>HwInfo</span>) <span class='op'>-&gt;</span> <span class='ident'>Error</span> {
         <span class='kw'>let</span> <span class='ident'>mlen</span> <span class='op'>=</span> <span class='ident'>info</span>.<span class='ident'>manufact</span>.<span class='ident'>len</span>();
         <span class='kw'>let</span> <span class='ident'>plen</span> <span class='op'>=</span> <span class='ident'>info</span>.<span class='ident'>product</span>.<span class='ident'>len</span>();
