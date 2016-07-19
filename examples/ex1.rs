@@ -212,6 +212,9 @@ fn main() {
 
     dev.reset_buffer();
 
+    // read_async is a blocking call and doesn't return until
+    // async_stop is called , so we spawn a thread that sleeps
+    // for a bit while our async callback is called...
     let d = dev.clone();
     thread::spawn(move || {
         println!("async_stop thread sleeping for 5 seconds...");
