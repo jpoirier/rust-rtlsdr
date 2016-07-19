@@ -7,10 +7,9 @@ sudo: true
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install libusb-1.0-0-dev
-  - sudo apt-get install git
 install:
   - git clone https://github.com/jpoirier/librtlsdr.git
-  - cd librtlsdr && mkdir build && cd build && cmake ../ && make && sudo make install && sudo ldconfig && cd ~
+  - cd librtlsdr && mkdir build && cd build && cmake ../ && make && sudo make install && sudo ldconfig && cd ../../ && rm -rf librtlsdr
 script:
   - cargo build --verbose
   - cargo doc
