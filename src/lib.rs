@@ -12,6 +12,7 @@ use std::str;
 
 
 // TODO:
+// - better function/method documnentation
 // - better way to handle errors
 // - String vs str
 // - proper documentation
@@ -23,7 +24,7 @@ pub enum SamplingMode {
     None = 0,
     IADC = 1,
     QADC = 2,
-    Unknown = 3,
+    Error = 3,
 }
 
 // Convenience constants
@@ -45,12 +46,17 @@ pub const MAX_STR_SIZE: usize = 35;
 // EEPROM stored device information starts after the header bytes.
 const STR_OFFSET_START: usize = 0x09;
 const EEPROM_SIZE: i32 = 256;
+/// Get/set hardware info errors.
 const NO_VALID_EEPROM_HEADER: i32 = -13;
 const STRING_VALUE_TOO_LONG: i32 = -14;
 const STRING_DESCRIPTOR_INVALID: i32 = -15;
 const STRING__DESCRIPTOR_TOO_LONG: i32 = -16;
-const LIBUSB_ERROR_OTHER: i32 = -99;
 
+//
+const ERROR_ONKNOWN: i32 = -98;
+const LIBUSB_ERROR_ONKNOWN: i32 = -99;
+
+// C lib opaque device struct
 enum RTLSDRDev { }
 type RTLSDRDevT = RTLSDRDev;
 
@@ -108,7 +114,7 @@ pub enum Error {
     StringValueTooLong,
     StringDescriptorInvalid,
     StringDescriptorTooLong,
-    Other,
+    Unknown,
 }
 
 
@@ -176,27 +182,27 @@ extern "C" {
     fn rtlsdr_cancel_async(dev: *mut RTLSDRDevT) -> c_int;
 }
 
+// FIXME: there has to be a better way...
 fn get_err_msg(e: c_int) -> Error {
-    use Error::*;
     match e {
-        0 => NoError,
-        -1 => Io,
-        -2 => InvalidParam,
-        -3 => Access,
-        -4 => NoDevice,
-        -5 => NotFound,
-        -6 => Busy,
-        -7 => Timeout,
-        -8 => Overflow,
-        -9 => Pipe,
-        -10 => Interrupted,
-        -11 => NoMem,
-        -12 => NotSupported,
-        NO_VALID_EEPROM_HEADER => NoValidEEPROMHeader,
-        STRING_VALUE_TOO_LONG => StringValueTooLong,
-        STRING_DESCRIPTOR_INVALID => StringDescriptorInvalid,
-        STRING__DESCRIPTOR_TOO_LONG => StringDescriptorTooLong,
-        _ => Other,
+        0 => Error::NoError,
+        -1 => Error::Io,
+        -2 => Error::InvalidParam,
+        -3 => Error::Access,
+        -4 => Error::NoDevice,
+        -5 => Error::NotFound,
+        -6 => Error::Busy,
+        -7 => Error::Timeout,
+        -8 => Error::Overflow,
+        -9 => Error::Pipe,
+        -10 => Error::Interrupted,
+        -11 => Error::NoMem,
+        -12 => Error::NotSupported,
+        NO_VALID_EEPROM_HEADER => Error::NoValidEEPROMHeader,
+        STRING_VALUE_TOO_LONG => Error::StringValueTooLong,
+        STRING_DESCRIPTOR_INVALID => Error::StringDescriptorInvalid,
+        STRING__DESCRIPTOR_TOO_LONG => Error::StringDescriptorTooLong,
+        _ => Error::Unknown,
     }
 }
 
@@ -431,7 +437,7 @@ impl Device {
             let mut v = vec![0; i as usize];
             i = rtlsdr_get_tuner_gains(self.dev, v.as_mut_ptr());
             let err = if i <= 0 {
-                Error::Other
+                Error::Unknown
             } else {
                 Error::NoError
             };
@@ -522,7 +528,7 @@ impl Device {
                 0 => SamplingMode::None,
                 1 => SamplingMode::IADC,
                 2 => SamplingMode::QADC,
-                _ => SamplingMode::Unknown,
+                _ => SamplingMode::Error,
             }
         }
     }
@@ -581,7 +587,7 @@ impl Device {
 
     }
 
-    /// Gets the dongle's information items.
+    /// Reads the dongle's information items from the EEPROM.
     pub fn get_hw_info(&self) -> (HwInfo, Error) {
         let mut have_serial = false;
         let mut remote_wakeup = false;
@@ -635,7 +641,7 @@ impl Device {
         (info, err)
     }
 
-    /// SetCenterFreq the dongle's information items.
+    /// Write the dongle's information items to the EEPROM.
     pub fn set_hw_info(&self, info: &HwInfo) -> Error {
         let mlen = info.manufact.len();
         let plen = info.product.len();

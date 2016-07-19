@@ -1,6 +1,6 @@
 [package]
 name = "rtl-sdr"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["Joseph Poirier <jdpoirier@gmail.com>"]
 repository = "https://github.com/jpoirier/rust-rtlsdr"
 homepage = "https://github.com/jpoirier/rust-rtlsdr"
