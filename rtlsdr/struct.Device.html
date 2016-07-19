@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Device` struct in crate `rtlsdr`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Device">
+
+    <title>rtlsdr::Device - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='index.html'>rtlsdr</a></p><script>window.sidebarCurrent = {name: 'Device', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='index.html'>rtlsdr</a>::<wbr><a class='struct' href=''>Device</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-35' class='srclink' href='../src/rtlsdr/src/lib.rs.html#46-48' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct Device {
+    // some fields omitted
+}</pre><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl <a class='struct' href='../rtlsdr/struct.Device.html' title='rtlsdr::Device'>Device</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-300' class='srclink' href='../src/rtlsdr/src/lib.rs.html#301-653' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.close' class='method'><code>fn <a href='#method.close' class='fnname'>close</a>(&amp;self) -&gt; <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a></code></h4>
+<div class='docblock'><p>Closes the device.</p>
+</div><h4 id='method.set_xtal_freq' class='method'><code>fn <a href='#method.set_xtal_freq' class='fnname'>set_xtal_freq</a>(&amp;self, rtl_freq_hz: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a>, tuner_freq_hz: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a>) -&gt; <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a></code></h4>
+<div class='docblock'><p>Sets the crystal oscillator frequencies.</p>
+
+<p>Typically both ICs (rtlsdr and tuner) use the same clock. Changing the
+clock may make sense if you are applying an external clock to the tuner
+or to compensate the frequency (and sample rate) error caused by the
+original (cheap) crystal.</p>
+
+<p>Note, call this function only if you fully understand the implications.</p>
+</div><h4 id='method.get_xtal_freq' class='method'><code>fn <a href='#method.get_xtal_freq' class='fnname'>get_xtal_freq</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>(</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a>, <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a>, <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>)</a></code></h4>
+<div class='docblock'><p>Returns the crystal oscillator frequencies.
+Typically both ICs (rtlsdr and tuner) use the same clock.</p>
+</div><h4 id='method.get_usb_strings' class='method'><code>fn <a href='#method.get_usb_strings' class='fnname'>get_usb_strings</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>(</a><a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>, <a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>, <a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>, <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>)</a></code></h4>
+<div class='docblock'><p>Returns the device information (manufact, product, serial).
+Note, strings may be empty.</p>
+</div><h4 id='method.write_eeprom' class='method'><code>fn <a href='#method.write_eeprom' class='fnname'>write_eeprom</a>(&amp;self, data: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a>&gt;, offset: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a>) -&gt; <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a></code></h4>
+<div class='docblock'><p>Writes data to the EEPROM.</p>
+</div><h4 id='method.read_eeprom' class='method'><code>fn <a href='#method.read_eeprom' class='fnname'>read_eeprom</a>(&amp;self, offset: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a>, len: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u16.html'>u16</a>) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>(</a><a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a>&gt;, <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>)</a></code></h4>
+<div class='docblock'><p>Returns data read from the EEPROM.</p>
+</div><h4 id='method.set_center_freq' class='method'><code>fn <a href='#method.set_center_freq' class='fnname'>set_center_freq</a>(&amp;self, freq_hz: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a>) -&gt; <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a></code></h4>
+<div class='docblock'><p>Sets the center frequency.</p>
+</div><h4 id='method.get_center_freq' class='method'><code>fn <a href='#method.get_center_freq' class='fnname'>get_center_freq</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a></code></h4>
+<div class='docblock'><p>Returns the tuned frequency or zero on error.</p>
+</div><h4 id='method.set_freq_correction' class='method'><code>fn <a href='#method.set_freq_correction' class='fnname'>set_freq_correction</a>(&amp;self, ppm: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a>) -&gt; <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a></code></h4>
+<div class='docblock'><p>Sets the frequency correction.</p>
+</div><h4 id='method.get_freq_correction' class='method'><code>fn <a href='#method.get_freq_correction' class='fnname'>get_freq_correction</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a></code></h4>
+<div class='docblock'><p>Returns the frequency correction value.</p>
+</div><h4 id='method.get_tuner_type' class='method'><code>fn <a href='#method.get_tuner_type' class='fnname'>get_tuner_type</a>(&amp;self) -&gt; <a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a></code></h4>
+<div class='docblock'><p>Returns the tuner type.</p>
+</div><h4 id='method.get_tuner_gains' class='method'><code>fn <a href='#method.get_tuner_gains' class='fnname'>get_tuner_gains</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>(</a><a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a>&gt;, <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>)</a></code></h4>
+<div class='docblock'><p>Returns a list of supported tuner gains.
+Values are in tenths of dB, e.g. 115 means 11.5 dB.</p>
+</div><h4 id='method.set_tuner_gain' class='method'><code>fn <a href='#method.set_tuner_gain' class='fnname'>set_tuner_gain</a>(&amp;self, gain: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a>) -&gt; <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a></code></h4>
+<div class='docblock'><p>Sets the tuner gain. Note, manual gain mode
+must be enabled for this to work. Valid gain values may be
+queried using GetTunerGains.</p>
+
+<p>Valid values (in tenths of a dB) are:
+-10, 15, 40, 65, 90, 115, 140, 165, 190, 215, 240, 290,
+340, 420, 430, 450, 470, 490</p>
+
+<p>Gain values are in tenths of dB, e.g. 115 means 11.5 dB.</p>
+</div><h4 id='method.get_tuner_gain' class='method'><code>fn <a href='#method.get_tuner_gain' class='fnname'>get_tuner_gain</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a></code></h4>
+<div class='docblock'><p>Returns the tuner gain.</p>
+
+<p>Gain values are in tenths of dB, e.g. 115 means 11.5 dB.</p>
+</div><h4 id='method.set_tuner_bandwidth' class='method'><code>fn <a href='#method.set_tuner_bandwidth' class='fnname'>set_tuner_bandwidth</a>(&amp;self, bw_hz: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a>) -&gt; <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a></code></h4>
+<div class='docblock'><p>Sets the device bandwidth.</p>
+</div><h4 id='method.set_tuner_if_gain' class='method'><code>fn <a href='#method.set_tuner_if_gain' class='fnname'>set_tuner_if_gain</a>(&amp;self, stage: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a>, gains_tenths_db: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a>) -&gt; <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a></code></h4>
+<div class='docblock'><p>Sets the intermediate frequency gain.</p>
+
+<p>Intermediate frequency gain stage number 1 to 6.
+Gain values are in tenths of dB, e.g. -30 means -3.0 dB.</p>
+</div><h4 id='method.set_tuner_gain_mode' class='method'><code>fn <a href='#method.set_tuner_gain_mode' class='fnname'>set_tuner_gain_mode</a>(&amp;self, manual_mode: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>) -&gt; <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a></code></h4>
+<div class='docblock'><p>Sets the gain mode, automatic or manual.
+Manual gain mode must be enabled for the gain setter function to work.</p>
+</div><h4 id='method.set_sample_rate' class='method'><code>fn <a href='#method.set_sample_rate' class='fnname'>set_sample_rate</a>(&amp;self, rate_hz: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a>) -&gt; <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a></code></h4>
+<div class='docblock'><p>Sets the sample rate.</p>
+
+<p>When applicable, the baseband filters are also selected based
+on the requested sample rate.</p>
+</div><h4 id='method.get_sample_rate' class='method'><code>fn <a href='#method.get_sample_rate' class='fnname'>get_sample_rate</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a></code></h4>
+<div class='docblock'><p>Returns the sample rate.</p>
+</div><h4 id='method.set_testmode' class='method'><code>fn <a href='#method.set_testmode' class='fnname'>set_testmode</a>(&amp;self, test_mode: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>) -&gt; <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a></code></h4>
+<div class='docblock'><p>Sets device to test mode.</p>
+
+<p>Test mode returns 8 bit counters instead of samples. Note,
+the counter is generated inside the device.</p>
+</div><h4 id='method.set_agc_mode' class='method'><code>fn <a href='#method.set_agc_mode' class='fnname'>set_agc_mode</a>(&amp;self, agc_mode: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>) -&gt; <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a></code></h4>
+<div class='docblock'><p>Sets the AGC mode.</p>
+</div><h4 id='method.set_direct_sampling' class='method'><code>fn <a href='#method.set_direct_sampling' class='fnname'>set_direct_sampling</a>(&amp;self, mode: <a class='enum' href='../rtlsdr/enum.SamplingMode.html' title='rtlsdr::SamplingMode'>SamplingMode</a>) -&gt; <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a></code></h4>
+<div class='docblock'><p>Sets the direct sampling mode.</p>
+
+<p>When enabled, the IF mode of the device is activated, and
+SetCenterFreq() will control the IF-frequency of the DDC, which
+can be used to tune from 0 to 28.8 MHz (xtal frequency of the device).</p>
+</div><h4 id='method.get_direct_sampling' class='method'><code>fn <a href='#method.get_direct_sampling' class='fnname'>get_direct_sampling</a>(&amp;self) -&gt; <a class='enum' href='../rtlsdr/enum.SamplingMode.html' title='rtlsdr::SamplingMode'>SamplingMode</a></code></h4>
+<div class='docblock'><p>Returns the state of direct sampling mode.</p>
+</div><h4 id='method.set_offset_tuning' class='method'><code>fn <a href='#method.set_offset_tuning' class='fnname'>set_offset_tuning</a>(&amp;self, enable: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>) -&gt; <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a></code></h4>
+<div class='docblock'><p>Sets the offset tuning mode for zero-IF tuners, which
+avoids problems caused by the DC offset of the ADCs and 1/f noise.</p>
+</div><h4 id='method.get_offset_tuning' class='method'><code>fn <a href='#method.get_offset_tuning' class='fnname'>get_offset_tuning</a>(&amp;self) -&gt; <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a></code></h4>
+<div class='docblock'><p>Returns the offset tuning mode.</p>
+</div><h4 id='method.reset_buffer' class='method'><code>fn <a href='#method.reset_buffer' class='fnname'>reset_buffer</a>(&amp;self) -&gt; <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a></code></h4>
+<div class='docblock'><p>Resets the streaming buffer.</p>
+</div><h4 id='method.read_sync' class='method'><code>fn <a href='#method.read_sync' class='fnname'>read_sync</a>(&amp;self, len: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a>) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>(</a><a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a>&gt;, <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a>, <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>)</a></code></h4>
+<div class='docblock'><p>Performs a synchronous read of samples and returns
+the number of samples read.</p>
+</div><h4 id='method.read_async' class='method'><code>fn <a href='#method.read_async' class='fnname'>read_async</a>(&amp;self, f: <a class='type' href='../rtlsdr/type.ReadAsyncCbT.html' title='rtlsdr::ReadAsyncCbT'>ReadAsyncCbT</a>, ctx: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.pointer.html'>*mut </a><a class='enum' href='https://doc.rust-lang.org/nightly/std/os/raw/enum.c_void.html' title='std::os::raw::c_void'>c_void</a>, buf_num: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a>, buf_len: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a>) -&gt; <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a></code></h4>
+<div class='docblock'><p>Reads samples asynchronously. Note, this function
+will block until canceled using CancelAsync. ReadAsyncCbT is
+a package global variable.</p>
+
+<p>Optional bufNum buffer count, bufNum * bufLen = overall buffer size,
+set to 0 for default buffer count (32).
+Optional bufLen buffer length, must be multiple of 512, set to 0 for
+default buffer length (16 * 32 * 512).</p>
+</div><h4 id='method.cancel_async' class='method'><code>fn <a href='#method.cancel_async' class='fnname'>cancel_async</a>(&amp;self) -&gt; <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a></code></h4>
+<div class='docblock'><p>Cancels all pending asynchronous operations.</p>
+</div><h4 id='method.get_hw_info' class='method'><code>fn <a href='#method.get_hw_info' class='fnname'>get_hw_info</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>(</a><a class='struct' href='../rtlsdr/struct.HwInfo.html' title='rtlsdr::HwInfo'>HwInfo</a>, <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>)</a></code></h4>
+<div class='docblock'><p>Gets the dongle&#39;s information items.</p>
+</div><h4 id='method.set_hw_info' class='method'><code>fn <a href='#method.set_hw_info' class='fnname'>set_hw_info</a>(&amp;self, info: &amp;<a class='struct' href='../rtlsdr/struct.HwInfo.html' title='rtlsdr::HwInfo'>HwInfo</a>) -&gt; <a class='enum' href='../rtlsdr/enum.Error.html' title='rtlsdr::Error'>Error</a></code></h4>
+<div class='docblock'><p>Sets the dongle&#39;s information items.</p>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a> for <a class='struct' href='../rtlsdr/struct.Device.html' title='rtlsdr::Device'>Device</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-42' class='srclink' href='../src/rtlsdr/src/lib.rs.html#50' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html' title='core::marker::Sync'>Sync</a> for <a class='struct' href='../rtlsdr/struct.Device.html' title='rtlsdr::Device'>Device</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-43' class='srclink' href='../src/rtlsdr/src/lib.rs.html#51' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'></div><h3 id='derived_implementations'>Derived Implementations </h3><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a> for <a class='struct' href='../rtlsdr/struct.Device.html' title='rtlsdr::Device'>Device</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-37' class='srclink' href='../src/rtlsdr/src/lib.rs.html#45' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.clone' class='method'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone' class='fnname'>clone</a>(&amp;self) -&gt; <a class='struct' href='../rtlsdr/struct.Device.html' title='rtlsdr::Device'>Device</a></code></h4>
+<div class='docblock'><p>Returns a copy of the value. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone">Read more</a></p>
+</div><h4 id='method.clone_from' class='method'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from' class='fnname'>clone_from</a>(&amp;mut self, source: &amp;Self)</code><div class='since' title='Stable since Rust version 1.0.0'>1.0.0</div></h4>
+<div class='docblock'><p>Performs copy-assignment from <code>source</code>. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from">Read more</a></p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Copy.html' title='core::marker::Copy'>Copy</a> for <a class='struct' href='../rtlsdr/struct.Device.html' title='rtlsdr::Device'>Device</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-41' class='srclink' href='../src/rtlsdr/src/lib.rs.html#45' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "rtlsdr";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script defer src="../search-index.js"></script>
+</body>
+</html>
