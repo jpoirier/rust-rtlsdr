@@ -5,4 +5,4 @@
 [![Crates.io](https://img.shields.io/crates/v/rtl-sdr.svg?maxAge=3600)](https://crates.io/crates/rtl-sdr)
 
 
-*Note, this is a project I started in order to start learning Rust so be careful when using this code.
+*Note, I started this project to start learning Rust so be cautious when using the code.
