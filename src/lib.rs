@@ -21,7 +21,6 @@ use std::str;
 // - better function/method documnentation
 // - better way to handle errors
 // - String vs str
-// - proper documentation
 // - tests
 // - read more Rust code, learn more Rust, make this lib better
 
@@ -37,13 +36,13 @@ pub enum SamplingMode {
 // pub const DefaultGain: String = "auto";
 pub const DEFAULT_FC: i32 = 80_000_000;
 pub const DEFAULT_RS: i32 = 1_024_000;
-pub const DEFAULT_READ_SIZE: i32 = 1024;
-pub const CRYSTAL_FREQ: i32 = 28800000;
-pub const DEFAULT_SAMPLE_RATE: i32 = 2048000;
+pub const DEFAULT_READ_SIZE: i32 = 1_024;
+pub const CRYSTAL_FREQ: i32 = 28_800_000;
+pub const DEFAULT_SAMPLE_RATE: i32 = 2_048_000;
 pub const DEFAULT_ASYNC_BUF_NUMBER: i32 = 32;
-pub const DEFAULT_BUF_LENGTH: i32 = (16 * 16384);
+pub const DEFAULT_BUF_LENGTH: i32 = (16 * 16_384);
 pub const MIN_BUF_LENGTH: i32 = 512;
-pub const MAX_BUF_LENGTH: i32 = (256 * 16384);
+pub const MAX_BUF_LENGTH: i32 = (256 * 16_384);
 /// Hardware info strings (product, manufacturer, serial) maximum size.
 /// MAX_STR_SIZE = (max string length - 2 (header bytes)) \ 2. Where each
 /// info character is followed by a null character.
@@ -229,7 +228,6 @@ fn from_pchar(p: *const c_char) -> String {
     String::from(str::from_utf8(c_str.to_bytes()).unwrap())
 }
 
-
 /// Returns the number of devices detected.
 pub fn get_device_count() -> i32 {
     unsafe { rtlsdr_get_device_count() as i32 }
@@ -324,7 +322,7 @@ fn set_string_descriptors(info: &HwInfo, data: &mut Vec<u8>) -> Error {
         }
     }
 
-    return get_err_msg(0);
+    get_err_msg(0)
 }
 
 impl Device {
@@ -447,6 +445,7 @@ impl Device {
             } else {
                 Error::NoError
             };
+
             (v, err)
         }
     }
@@ -565,6 +564,7 @@ impl Device {
                                        buf.as_mut_ptr() as *mut c_void,
                                        len,
                                        &mut n_read as *mut c_int);
+
             (buf, n_read, get_err_msg(err))
         }
 
@@ -661,6 +661,9 @@ impl Device {
         data[3] = (info.vendor_id >> 8) as u8;
         data[4] = info.product_id as u8;
         data[5] = (info.product_id >> 8) as u8;
+        data[6] = 0x00u8;
+        data[7] = 0x00u8;
+        data[8] = 0x00u8;
 
         if info.have_serial == true {
             data[6] = 0xA5u8;
@@ -677,6 +680,6 @@ impl Device {
             err = self.write_eeprom(data, 0);
         }
 
-        return err;
+        err
     }
 }
