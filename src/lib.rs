@@ -593,7 +593,7 @@ impl Device {
 
     }
 
-    /// Reads the dongle's information items from the EEPROM.
+    /// Reads the dongle's information from the EEPROM.
     pub fn get_hw_info(&self) -> (HwInfo, Error) {
         let mut have_serial = false;
         let mut remote_wakeup = false;
@@ -647,7 +647,7 @@ impl Device {
         (info, err)
     }
 
-    /// Write the dongle's information items to the EEPROM.
+    /// Write the dongle's information to the EEPROM.
     pub fn set_hw_info(&self, info: &HwInfo) -> Error {
         let mlen = info.manufact.len();
         let plen = info.product.len();
