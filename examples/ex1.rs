@@ -6,7 +6,7 @@ use rtlsdr::Error;
 use std::time::Duration;
 use std::thread;
 
-
+#[allow(unused_mut)]
 fn sdr_config(dev: &rtlsdr::Device) -> Error {
     let (m, p, s, mut err) = dev.get_usb_strings();
     match err {
