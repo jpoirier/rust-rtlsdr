@@ -229,8 +229,8 @@ fn main() {
                          rtlsdr::DEFAULT_ASYNC_BUF_NUMBER,
                          rtlsdr::DEFAULT_BUF_LENGTH);
     match err {
-        Error::NoError => println!("device close successful..."),
-        _ => println!("dev close error - {:?}", err),
+        Error::NoError => println!("read_async returned successfully..."),
+        _ => println!("read_async return error - {:?}", err),
     }
 
     err = dev.close();
